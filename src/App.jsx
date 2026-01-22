@@ -30,7 +30,9 @@ import blueFolderImg from './assets/images/blue_folder.png';
 import backgroundImg from './assets/images/background.png';
 import soldierImg from './assets/images/solider.png';
 import soldierDischargeImg from './assets/images/solider_discharge.png';
+import societyImg from './assets/images/society.png';
 import fantasyWorldMapImg from './assets/images/fantasy_world_map.png';
+import societyWorldMapImg from './assets/images/society_world_map.png';
 
 function App() {
   // ... existing code ...
@@ -349,6 +351,7 @@ const FinancialMOSPage = ({ onBack, onAssetDetail }) => {
   const [currentStage, setCurrentStage] = useState(1);
   const [activeMission, setActiveMission] = useState(null);
   const [viewMode, setViewMode] = useState('board'); // 'board' or 'map'
+  const [isSocietyMode, setIsSocietyMode] = useState(false);
 
   const missionMap = [
     { id: 1, title: '입대신고', desc: '하나은행 앱 설치 및 가입', reward: 50 },
@@ -361,32 +364,71 @@ const FinancialMOSPage = ({ onBack, onAssetDetail }) => {
     { id: 8, title: '전역 준비', desc: '전역 후 자산플랜 설계', reward: 100 },
   ];
 
+  const societyMissionMap = [
+    { id: 1, title: '첫 월급', desc: '급여통장 쪼개기 & 예산 수립', reward: 50 },
+    { id: 2, title: '소비 관리', desc: '신용카드 vs 체크카드 혜택 비교', reward: 30 },
+    { id: 3, title: '비상금', desc: '하루만 맡겨도 이자쌓이는 파킹통장', reward: 50 },
+    { id: 4, title: '본격 투자', desc: '나에게 맞는 펀드/ETF 찾기', reward: 100 },
+    { id: 5, title: '세금 혜택', desc: '연말정산 미리보기 & 절세 꿀팁', reward: 50 },
+    { id: 6, title: '내 집 마련', desc: '주택청약 1순위 조건 만들기', reward: 100 },
+    { id: 7, title: '은퇴 준비', desc: '개인연금(IRP) 가입하고 세제혜택', reward: 100 },
+    { id: 8, title: '경제적 자유', desc: '은퇴 후 자산 시뮬레이션', reward: 200 },
+  ];
+
+  const currentMissions = isSocietyMode ? societyMissionMap : missionMap;
+
   // Helper patterns
   const cardColors = ['#FFE4E1', '#FFFACD', '#E0FFFF', '#F0FFF0', '#F5F5DC', '#E6E6FA', '#FFE4B5', '#F0F8FF'];
 
   return (
-    <div className="app-container" style={{ backgroundColor: '#F0F9FF', display: 'flex', flexDirection: 'column' }}>
+    <div className="app-container" style={{ backgroundColor: isSocietyMode ? '#E8F5E9' : '#F0F9FF', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <div className="header sticky top-0 bg-white z-10" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid #E5E7EB', boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}>
-        <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><ChevronLeft size={24} color="#333" /></button>
-        <div style={{ textAlign: 'center' }}>
-          <h1 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#1F2937' }}>금융 주특기 교육</h1>
-          <span style={{ fontSize: '11px', color: '#009490', fontWeight: '600' }}>Financial Training Course</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><ChevronLeft size={24} color="#333" /></button>
+          <div>
+            <h1 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#1F2937' }}>{isSocietyMode ? '사회인 금융 로드맵' : '금융 주특기 교육'}</h1>
+            <span style={{ fontSize: '11px', color: isSocietyMode ? '#4CAF50' : '#009490', fontWeight: '600' }}>{isSocietyMode ? 'Society Financial Roadmap' : 'Financial Training Course'}</span>
+          </div>
         </div>
-        <button onClick={() => setViewMode(viewMode === 'board' ? 'map' : 'board')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#009490', fontWeight: 'bold', fontSize: '14px' }}>
-          {viewMode === 'board' ? '지도보기' : '보드보기'}
-        </button>
+
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {/* Toggle Switch */}
+          <div onClick={() => setIsSocietyMode(!isSocietyMode)} style={{
+            width: '74px', height: '28px', backgroundColor: isSocietyMode ? '#4CAF50' : '#E0E0E0',
+            borderRadius: '20px', position: 'relative', cursor: 'pointer', transition: 'background-color 0.3s',
+            display: 'flex', alignItems: 'center', padding: '0 4px'
+          }}>
+            <div style={{
+              width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%',
+              position: 'absolute', left: isSocietyMode ? '48px' : '4px', transition: 'left 0.3s',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+            }}></div>
+            <span style={{
+              position: 'absolute', left: isSocietyMode ? '10px' : '28px',
+              fontSize: '10px', fontWeight: 'bold', color: isSocietyMode ? 'white' : '#757575', pointerEvents: 'none'
+            }}>
+              {isSocietyMode ? '사회' : '현역'}
+            </span>
+          </div>
+
+          <button onClick={() => setViewMode(viewMode === 'board' ? 'map' : 'board')} style={{ backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '16px', padding: '4px 10px', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {viewMode === 'board' ? '🗺️ 지도' : '📋 보드'}
+          </button>
+        </div>
       </div>
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {/* Left: Asset Manager (Coach) */}
         <div style={{ width: '30%', backgroundColor: '#fff', borderRight: '1px solid #E5E7EB', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 16px', zIndex: 2 }}>
           <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-            <div style={{ backgroundColor: '#009490', color: 'white', fontSize: '11px', fontWeight: 'bold', padding: '4px 10px', borderRadius: '12px', display: 'inline-block', marginBottom: '8px' }}>자산관리관</div>
+            <div style={{ backgroundColor: isSocietyMode ? '#4CAF50' : '#009490', color: 'white', fontSize: '11px', fontWeight: 'bold', padding: '4px 10px', borderRadius: '12px', display: 'inline-block', marginBottom: '8px' }}>
+              {isSocietyMode ? '금융 멘토' : '자산관리관'}
+            </div>
             <div onClick={onAssetDetail} style={{ cursor: 'pointer', position: 'relative' }}>
-              <img src={soldierImg} alt="자산관리관" style={{ width: '90px', filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.15))' }} />
-              <div style={{ position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', backgroundColor: '#fff', border: '1px solid #E5E7EB', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold', color: '#009490', whiteSpace: 'nowrap', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                자산상세 <ChevronLeft size={10} style={{ transform: 'rotate(180deg)' }} />
+              <img src={isSocietyMode ? societyImg : soldierImg} alt="Coach" style={{ width: '90px', filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.15))' }} />
+              <div style={{ position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', backgroundColor: '#fff', border: '1px solid #E5E7EB', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold', color: isSocietyMode ? '#4CAF50' : '#009490', whiteSpace: 'nowrap', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                {isSocietyMode ? '멘토링' : '자산상세'} <ChevronLeft size={10} style={{ transform: 'rotate(180deg)' }} />
               </div>
             </div>
           </div>
@@ -402,25 +444,25 @@ const FinancialMOSPage = ({ onBack, onAssetDetail }) => {
           {/* MAP VIEW */}
           {viewMode === 'map' && (
             <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
-              {/* Flip image to move City (if on left) to Right */}
-              <img src={fantasyWorldMapImg} alt="World Map" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              {/* Flip image to move City (if on left) to Right only for Fantasy Map. Society map is generated L->R */}
+              <img src={isSocietyMode ? societyWorldMapImg : fantasyWorldMapImg} alt="World Map" style={{ width: '100%', height: '100%', objectFit: 'cover', transform: isSocietyMode ? 'none' : 'scaleX(-1)' }} />
 
               {/* 3 Interactive Zones/Pins over the map */}
-              {/* Zone 1: Early Game (Forest) - Place on Left */}
-              <div onClick={() => setViewMode('board')} style={{ position: 'absolute', top: '25%', left: '20%', transform: 'translate(-50%, -50%)', cursor: 'pointer', textAlign: 'center' }}>
-                <div style={{ backgroundColor: '#4CAF50', color: 'white', padding: '8px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 4px 8px rgba(0,0,0,0.3)', marginBottom: '8px', whiteSpace: 'nowrap' }}>입대/기초훈련</div>
+              {/* Zone 1: Left */}
+              <div onClick={() => setViewMode('board')} style={{ position: 'absolute', top: isSocietyMode ? '50%' : '25%', left: '20%', transform: 'translate(-50%, -50%)', cursor: 'pointer', textAlign: 'center' }}>
+                <div style={{ backgroundColor: isSocietyMode ? '#FF5722' : '#2962FF', color: 'white', padding: '8px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 4px 8px rgba(0,0,0,0.3)', marginBottom: '8px', whiteSpace: 'nowrap' }}>{isSocietyMode ? '커리어 시작/이직' : '미래설계/전역'}</div>
                 <div style={{ width: '40px', height: '40px', backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: '50%', border: '2px solid white', margin: '0 auto', animation: 'pulse 2s infinite' }}></div>
               </div>
 
-              {/* Zone 2: Mid Game (Desert) - Place closer to Center/Right */}
-              <div onClick={() => setViewMode('board')} style={{ position: 'absolute', top: '60%', left: '45%', transform: 'translate(-50%, -50%)', cursor: 'pointer', textAlign: 'center' }}>
-                <div style={{ backgroundColor: '#FFA000', color: 'white', padding: '8px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 4px 8px rgba(0,0,0,0.3)', marginBottom: '8px', whiteSpace: 'nowrap' }}>자산형성/적금</div>
+              {/* Zone 2: Center */}
+              <div onClick={() => setViewMode('board')} style={{ position: 'absolute', top: isSocietyMode ? '35%' : '60%', left: '45%', transform: 'translate(-50%, -50%)', cursor: 'pointer', textAlign: 'center' }}>
+                <div style={{ backgroundColor: isSocietyMode ? '#9C27B0' : '#FFA000', color: 'white', padding: '8px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 4px 8px rgba(0,0,0,0.3)', marginBottom: '8px', whiteSpace: 'nowrap' }}>{isSocietyMode ? '내 집 마련 플랜' : '자산형성/적금'}</div>
                 <div style={{ width: '40px', height: '40px', backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: '50%', border: '2px solid white', margin: '0 auto', animation: 'pulse 2s infinite' }}></div>
               </div>
 
-              {/* Zone 3: Late Game (City) - Place on Right */}
-              <div onClick={() => setViewMode('board')} style={{ position: 'absolute', top: '20%', right: '20%', transform: 'translate(50%, -50%)', cursor: 'pointer', textAlign: 'center' }}>
-                <div style={{ backgroundColor: '#2962FF', color: 'white', padding: '8px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 4px 8px rgba(0,0,0,0.3)', marginBottom: '8px', whiteSpace: 'nowrap' }}>미래설계/전역</div>
+              {/* Zone 3: Right */}
+              <div onClick={() => setViewMode('board')} style={{ position: 'absolute', top: isSocietyMode ? '20%' : '20%', right: '20%', transform: 'translate(50%, -50%)', cursor: 'pointer', textAlign: 'center' }}>
+                <div style={{ backgroundColor: isSocietyMode ? '#3F51B5' : '#4CAF50', color: 'white', padding: '8px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 4px 8px rgba(0,0,0,0.3)', marginBottom: '8px', whiteSpace: 'nowrap' }}>{isSocietyMode ? '은퇴/경제적자유' : '입대/기초훈련'}</div>
                 <div style={{ width: '40px', height: '40px', backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: '50%', border: '2px solid white', margin: '0 auto', animation: 'pulse 2s infinite' }}></div>
               </div>
             </div>
@@ -432,8 +474,8 @@ const FinancialMOSPage = ({ onBack, onAssetDetail }) => {
 
               <div style={{ width: '100%', maxWidth: '360px', paddingBottom: '40px' }}>
                 {/* Render chunks of 4 (Snake) */}
-                {Array.from({ length: Math.ceil(missionMap.length / 4) }).map((_, rowIndex) => {
-                  const rowItems = missionMap.slice(rowIndex * 4, (rowIndex + 1) * 4);
+                {Array.from({ length: Math.ceil(currentMissions.length / 4) }).map((_, rowIndex) => {
+                  const rowItems = currentMissions.slice(rowIndex * 4, (rowIndex + 1) * 4);
                   const isReversed = rowIndex % 2 !== 0;
                   const displayItems = isReversed ? [...rowItems].reverse() : rowItems;
 
@@ -453,7 +495,7 @@ const FinancialMOSPage = ({ onBack, onAssetDetail }) => {
 
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         {displayItems.map((mission, colIndex) => {
-                          const originalIndex = missionMap.indexOf(mission);
+                          const originalIndex = currentMissions.indexOf(mission);
                           const isCurrent = originalIndex === currentStage; // 0-based active index
                           const isLocked = originalIndex > currentStage;
                           const isCompleted = originalIndex < currentStage;
