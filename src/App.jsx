@@ -29,6 +29,7 @@ import militaryBarracksImg from './assets/images/military_barracks.png';
 import blueFolderImg from './assets/images/blue_folder.png';
 import backgroundImg from './assets/images/background.png';
 import soldierImg from './assets/images/solider.png';
+import soldierDischargeImg from './assets/images/solider_discharge.png';
 import fantasyWorldMapImg from './assets/images/fantasy_world_map.png';
 
 function App() {
@@ -542,79 +543,106 @@ const FinancialMOSPage = ({ onBack, onAssetDetail }) => {
   );
 };
 
-const AssetDetailPage = ({ onBack }) => (
-  <div className="app-container" style={{
-    background: 'linear-gradient(180deg, #E0F7FA 0%, #FFFFFF 50%)',
-    display: 'flex',
-    flexDirection: 'column',
-    position: 'relative',
-    overflow: 'hidden'
-  }}>
-    {/* Decorative Circle */}
-    <div style={{ position: 'absolute', top: '-10%', right: '-30%', width: '300px', height: '300px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,148,144,0.1) 0%, rgba(255,255,255,0) 70%)', zIndex: 0 }}></div>
-    <div className="header sticky top-0 bg-white z-10" style={{ display: 'flex', alignItems: 'center', padding: '16px', borderBottom: '1px solid #eee' }}>
-      <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '10px' }}><ChevronLeft size={24} color="#333" /></button>
-      <h1 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#333' }}>자산관리 상세</h1>
+const AssetDetailPage = ({ onBack }) => {
+  const [isDischarged, setIsDischarged] = useState(false);
+
+  return (
+    <div className="app-container" style={{
+      background: isDischarged ? 'linear-gradient(180deg, #E8F5E9 0%, #FFFFFF 50%)' : 'linear-gradient(180deg, #E0F7FA 0%, #FFFFFF 50%)',
+      display: 'flex',
+      flexDirection: 'column',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Decorative Circle */}
+      <div style={{ position: 'absolute', top: '-10%', right: '-30%', width: '300px', height: '300px', borderRadius: '50%', background: isDischarged ? 'radial-gradient(circle, rgba(76, 175, 80, 0.1) 0%, rgba(255,255,255,0) 70%)' : 'radial-gradient(circle, rgba(0,148,144,0.1) 0%, rgba(255,255,255,0) 70%)', zIndex: 0 }}></div>
+      <div className="header sticky top-0 bg-white z-10" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', borderBottom: '1px solid #eee' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '10px' }}><ChevronLeft size={24} color="#333" /></button>
+          <h1 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#333' }}>자산관리 상세</h1>
+        </div>
+        {/* Toggle Switch */}
+        <div onClick={() => setIsDischarged(!isDischarged)} style={{
+          width: '80px', height: '32px', backgroundColor: isDischarged ? '#4CAF50' : '#E0E0E0',
+          borderRadius: '20px', position: 'relative', cursor: 'pointer', transition: 'background-color 0.3s',
+          display: 'flex', alignItems: 'center', padding: '0 4px'
+        }}>
+          <div style={{
+            width: '24px', height: '24px', backgroundColor: 'white', borderRadius: '50%',
+            position: 'absolute', left: isDischarged ? '52px' : '4px', transition: 'left 0.3s',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+          }}></div>
+          <span style={{
+            position: 'absolute', left: isDischarged ? '10px' : '34px',
+            fontSize: '11px', fontWeight: 'bold', color: isDischarged ? 'white' : '#757575', pointerEvents: 'none'
+          }}>
+            {isDischarged ? '전역' : '현역'}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', marginTop: '30px', position: 'relative' }}>
+
+        {/* Service D-Day Badge (Top Left) */}
+        <div style={{ position: 'absolute', top: '10px', left: '20px' }}>
+          <div style={{ backgroundColor: isDischarged ? '#4CAF50' : '#262626', color: 'white', padding: '6px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '800', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+            {isDischarged ? '사회인 1일차' : 'D - 320'}
+          </div>
+        </div>
+        {/* Soldier Character */}
+        <div style={{ marginBottom: '40px', position: 'relative', marginTop: '80px' }}>
+          <div style={{ position: 'absolute', top: -50, left: '50%', transform: 'translateX(-50%)', backgroundColor: isDischarged ? '#4CAF50' : '#009490', color: 'white', padding: '8px 20px', borderRadius: '24px', fontSize: '15px', fontWeight: 'bold', whiteSpace: 'nowrap', boxShadow: isDischarged ? '0 4px 12px rgba(76, 175, 80, 0.3)' : '0 4px 12px rgba(0,148,144,0.3)', zIndex: 5 }}>
+            {isDischarged ? "축하합니다! 새로운 시작을 응원합니다!" : "\"이근준 상병님! 목돈 마련이 코앞입니다!\""}
+            <div style={{ position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: isDischarged ? '6px solid #4CAF50' : '6px solid #009490' }}></div>
+          </div>
+          <img src={isDischarged ? soldierDischargeImg : soldierImg} alt="군인" style={{ width: '180px', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.15))' }} />
+        </div>
+
+        {/* Percent Bars Container */}
+        <div style={{ width: '100%', maxWidth: '320px' }}>
+
+          {/* Bar 1: Asset Portfolio (Segmented) */}
+          <div style={{ marginBottom: '30px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '15px', fontWeight: 'bold', color: '#111' }}>
+              <span>{isDischarged ? '전역 자산 포트폴리오' : '자산 포트폴리오'}</span>
+            </div>
+            {/* Segmented Bar */}
+            <div style={{ height: '20px', backgroundColor: '#F3F4F6', borderRadius: '10px', overflow: 'hidden', display: 'flex' }}>
+              <div style={{ width: isDischarged ? '70%' : '60%', height: '100%', backgroundColor: isDischarged ? '#4CAF50' : '#009490' }}></div>
+              <div style={{ width: isDischarged ? '20%' : '30%', height: '100%', backgroundColor: '#D97706' }}></div>
+              <div style={{ width: '10%', height: '100%', backgroundColor: '#9CA3AF' }}></div>
+            </div>
+            {/* Legend */}
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px', fontSize: '11px', color: '#666' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#009490' }}></div>예적금 60%</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#D97706' }}></div>펀드 30%</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#9CA3AF' }}></div>기타 10%</div>
+            </div>
+          </div>
+
+          {/* Bar 2: Total Asset Goal Progress */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '15px', fontWeight: 'bold', color: '#111' }}>
+              <span>총 자산 달성률</span>
+              <span style={{ color: isDischarged ? '#4CAF50' : '#009490' }}>{isDischarged ? '100%' : '34%'}</span>
+            </div>
+            <div style={{ height: '14px', backgroundColor: '#E5E7EB', borderRadius: '7px', overflow: 'hidden' }}>
+              <div style={{ width: isDischarged ? '100%' : '34%', height: '100%', backgroundColor: isDischarged ? '#4CAF50' : '#009490', borderRadius: '7px', transition: 'width 1s ease-in-out' }}></div>
+            </div>
+            <div style={{ marginTop: '6px', fontSize: '12px', color: '#6B7280', textAlign: 'right' }}>
+              {isDischarged
+                ? <span>목표 <span style={{ fontWeight: 'bold', color: '#111' }}>1,000만원</span> <span style={{ fontWeight: 'bold', color: '#4CAF50' }}>달성 완료!</span></span>
+                : <span>목표 <span style={{ fontWeight: 'bold', color: '#111' }}>1,000만원</span> 중 <span style={{ fontWeight: 'bold', color: '#009490' }}>345만원</span> 모았어요!</span>
+              }
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <BottomNav />
     </div>
-
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', marginTop: '30px', position: 'relative' }}>
-
-      {/* Service D-Day Badge (Top Left) */}
-      <div style={{ position: 'absolute', top: '10px', left: '20px' }}>
-        <div style={{ backgroundColor: '#262626', color: 'white', padding: '6px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '800', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-          D - 320
-        </div>
-      </div>
-      {/* Soldier Character */}
-      <div style={{ marginBottom: '40px', position: 'relative', marginTop: '80px' }}>
-        <div style={{ position: 'absolute', top: -50, left: '50%', transform: 'translateX(-50%)', backgroundColor: '#009490', color: 'white', padding: '8px 20px', borderRadius: '24px', fontSize: '15px', fontWeight: 'bold', whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,148,144,0.3)', zIndex: 5 }}>
-          "이근준 상병님! 목돈 마련이 코앞입니다!"
-          <div style={{ position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '6px solid #009490' }}></div>
-        </div>
-        <img src={soldierImg} alt="김상병" style={{ width: '180px', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.15))' }} />
-      </div>
-
-      {/* Percent Bars Container */}
-      <div style={{ width: '100%', maxWidth: '320px' }}>
-
-        {/* Bar 1: Asset Portfolio (Segmented) */}
-        <div style={{ marginBottom: '30px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '15px', fontWeight: 'bold', color: '#111' }}>
-            <span>자산 포트폴리오</span>
-          </div>
-          {/* Segmented Bar */}
-          <div style={{ height: '20px', backgroundColor: '#F3F4F6', borderRadius: '10px', overflow: 'hidden', display: 'flex' }}>
-            <div style={{ width: '60%', height: '100%', backgroundColor: '#009490' }}></div>
-            <div style={{ width: '30%', height: '100%', backgroundColor: '#D97706' }}></div>
-            <div style={{ width: '10%', height: '100%', backgroundColor: '#9CA3AF' }}></div>
-          </div>
-          {/* Legend */}
-          <div style={{ display: 'flex', gap: '12px', marginTop: '8px', fontSize: '11px', color: '#666' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#009490' }}></div>예적금 60%</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#D97706' }}></div>펀드 30%</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#9CA3AF' }}></div>기타 10%</div>
-          </div>
-        </div>
-
-        {/* Bar 2: Total Asset Goal Progress */}
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '15px', fontWeight: 'bold', color: '#111' }}>
-            <span>총 자산 달성률</span>
-            <span style={{ color: '#009490' }}>34%</span>
-          </div>
-          <div style={{ height: '14px', backgroundColor: '#E5E7EB', borderRadius: '7px', overflow: 'hidden' }}>
-            <div style={{ width: '34%', height: '100%', backgroundColor: '#009490', borderRadius: '7px', transition: 'width 1s ease-in-out' }}></div>
-          </div>
-          <div style={{ marginTop: '6px', fontSize: '12px', color: '#6B7280', textAlign: 'right' }}>
-            목표 <span style={{ fontWeight: 'bold', color: '#111' }}>1,000만원</span> 중 <span style={{ fontWeight: 'bold', color: '#009490' }}>345만원</span> 모았어요!
-          </div>
-        </div>
-
-      </div>
-    </div>
-    <BottomNav />
-  </div>
-);
+  );
+};
 
 const TrainingItem = ({ type, title, desc, icon, status, reward }) => (
   <div style={{
