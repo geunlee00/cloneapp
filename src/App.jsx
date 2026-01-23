@@ -350,7 +350,7 @@ const SituationPage = ({ onComplete }) => {
 const FinancialMOSPage = ({ onBack, onAssetDetail }) => {
   const [currentStage, setCurrentStage] = useState(1);
   const [activeMission, setActiveMission] = useState(null);
-  const [viewMode, setViewMode] = useState('board'); // 'board' or 'map'
+  const [viewMode, setViewMode] = useState('map'); // 'board' or 'map'
   const [isSocietyMode, setIsSocietyMode] = useState(false);
 
   const missionMap = [
