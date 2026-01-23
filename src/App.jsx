@@ -20,7 +20,8 @@ import {
   Crosshair,
   Lock,
   Settings,
-  Ticket
+  Ticket,
+  Sparkles
 } from 'lucide-react';
 
 import militaryPxImg from './assets/images/military_px.png';
@@ -587,6 +588,17 @@ const FinancialMOSPage = ({ onBack, onAssetDetail }) => {
 
 const AssetDetailPage = ({ onBack }) => {
   const [isDischarged, setIsDischarged] = useState(false);
+  const [showAiReport, setShowAiReport] = useState(false);
+  const [aiAnalyzing, setAiAnalyzing] = useState(false);
+
+  const handleAiDiagnosis = () => {
+    setAiAnalyzing(true);
+    setShowAiReport(false); // Reset
+    setTimeout(() => {
+      setAiAnalyzing(false);
+      setShowAiReport(true);
+    }, 2500); // 2.5s analysis simulation
+  };
 
   return (
     <div className="app-container" style={{
@@ -645,8 +657,12 @@ const AssetDetailPage = ({ onBack }) => {
 
           {/* Bar 1: Asset Portfolio (Segmented) */}
           <div style={{ marginBottom: '30px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '15px', fontWeight: 'bold', color: '#111' }}>
-              <span>{isDischarged ? '전역 자산 포트폴리오' : '자산 포트폴리오'}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#111' }}>{isDischarged ? '전역 자산 포트폴리오' : '자산 포트폴리오'}</span>
+              {/* AI Diagnosis Trigger Button */}
+              <button onClick={handleAiDiagnosis} style={{ backgroundColor: isDischarged ? '#4CAF50' : '#009490', color: 'white', border: 'none', borderRadius: '20px', padding: '6px 12px', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                <Sparkles size={12} /> AI 정밀 진단
+              </button>
             </div>
             {/* Segmented Bar */}
             <div style={{ height: '20px', backgroundColor: '#F3F4F6', borderRadius: '10px', overflow: 'hidden', display: 'flex' }}>
@@ -678,6 +694,85 @@ const AssetDetailPage = ({ onBack }) => {
               }
             </div>
           </div>
+
+          {/* AI Analysis Result Area (Conditional) */}
+          {aiAnalyzing && (
+            <div style={{ marginTop: '20px', padding: '20px', backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: '16px', textAlign: 'center', backdropFilter: 'blur(4px)', border: '1px solid #E5E7EB', animation: 'fadeIn 0.5s' }}>
+              <div style={{ width: '40px', height: '40px', border: '3px solid #f3f3f3', borderTop: isDischarged ? '3px solid #4CAF50' : '3px solid #009490', borderRadius: '50%', margin: '0 auto 10px', animation: 'spin 1s linear infinite' }}></div>
+              <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#555' }}>AI가 자산 데이터를 분석 중입니다...</div>
+            </div>
+          )}
+
+          {showAiReport && (
+            <div style={{ marginTop: '20px', width: '100%', animation: 'slideUp 0.5s ease-out' }}>
+              <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '20px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid #f0f0f0', position: 'relative', overflow: 'hidden' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
+                  <div style={{ backgroundColor: isDischarged ? '#E8F5E9' : '#E0F7FA', padding: '6px', borderRadius: '50%' }}>
+                    <Sparkles size={16} color={isDischarged ? '#4CAF50' : '#009490'} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: '800', color: '#333' }}>AI HANA 진단 리포트</div>
+                    <div style={{ fontSize: '10px', color: '#888' }}>{new Date().toLocaleDateString()} 기준</div>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                  {/* Score */}
+                  <div style={{ position: 'relative', width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', borderRadius: '50%', border: '4px solid #f0f0f0' }}></div>
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', borderRadius: '50%', border: isDischarged ? '4px solid #4CAF50' : '4px solid #009490', borderRightColor: 'transparent', borderBottomColor: 'transparent', transform: 'rotate(-45deg)' }}></div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: '900', color: isDischarged ? '#4CAF50' : '#009490' }}>85</div>
+                      <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>점</div>
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div style={{ flex: 1, marginLeft: '20px' }}>
+                    <div style={{ marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: '600', marginBottom: '4px', color: '#555' }}>
+                        <span>안정성</span>
+                        <span>매우 높음</span>
+                      </div>
+                      <div style={{ height: '6px', backgroundColor: '#eee', borderRadius: '3px' }}>
+                        <div style={{ width: '90%', height: '100%', backgroundColor: '#4CAF50', borderRadius: '3px' }}></div>
+                      </div>
+                    </div>
+                    <div style={{ marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: '600', marginBottom: '4px', color: '#555' }}>
+                        <span>수익성</span>
+                        <span>보통</span>
+                      </div>
+                      <div style={{ height: '6px', backgroundColor: '#eee', borderRadius: '3px' }}>
+                        <div style={{ width: '50%', height: '100%', backgroundColor: '#FFC107', borderRadius: '3px' }}></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: '600', marginBottom: '4px', color: '#555' }}>
+                        <span>유동성</span>
+                        <span>낮음</span>
+                      </div>
+                      <div style={{ height: '6px', backgroundColor: '#eee', borderRadius: '3px' }}>
+                        <div style={{ width: '30%', height: '100%', backgroundColor: '#FF5722', borderRadius: '3px' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Comment */}
+                <div style={{ backgroundColor: '#f9fafb', borderRadius: '12px', padding: '12px', fontSize: '12px', lineHeight: '1.6', color: '#444', animation: 'fadeIn 1s 0.5s backwards' }}>
+                  <span style={{ fontSize: '16px', marginRight: '4px' }}>🤖</span>
+                  {isDischarged
+                    ? <span>이근준님의 소비 통제는 <b style={{ color: '#4CAF50' }}>상위 5%</b> 수준입니다! 훌륭해요. 이제는 파킹통장의 비중을 줄이고 <b style={{ color: '#4CAF50' }}>고수익 투자 상품(ETF)</b> 비중을 늘려 자산 증식 속도를 높여보세요.</span>
+                    : <span>군 적금 납입이 매우 <b style={{ color: '#009490' }}>성실</b>하십니다! 안정적인 목돈 마련이 기대되네요. 다만 전역 후 즉시 사용할 <b style={{ color: '#009490' }}>비상금(유동성)</b>이 조금 부족하니 50만원 정도는 수시입출금 통장에 둬보세요.</span>
+                  }
+                </div>
+              </div>
+            </div>
+          )}
+
 
         </div>
       </div>
