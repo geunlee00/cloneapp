@@ -46,6 +46,14 @@ function App() {
 
   const [currentView, setCurrentView] = useState('home');
 
+  // Lifted state for User Profile
+  const [userProfile, setUserProfile] = useState({
+    branch: '',
+    rank: '',
+    goalAmount: '',
+    futurePlan: ''
+  });
+
   if (currentView === 'report') {
     return <RankReport onBack={() => setCurrentView('home')} onSituation={() => setCurrentView('situation')} />;
   }
@@ -55,7 +63,19 @@ function App() {
   }
 
   if (currentView === 'lounge') {
-    return <MilitaryLoungePage onBack={() => setCurrentView('home')} onSoldierClick={() => setCurrentView('financialMOS')} />;
+    return <MilitaryLoungePage onBack={() => setCurrentView('home')} onSoldierClick={() => setCurrentView('profileSetup')} />;
+  }
+
+  if (currentView === 'profileSetup') {
+    return (
+      <ProfileSetupPage
+        onBack={() => setCurrentView('lounge')}
+        onComplete={(newProfile) => {
+          setUserProfile(newProfile);
+          setCurrentView('financialMOS');
+        }}
+      />
+    );
   }
 
   if (currentView === 'financialMOS') {
@@ -63,7 +83,7 @@ function App() {
   }
 
   if (currentView === 'assetDetail') {
-    return <AssetDetailPage onBack={() => setCurrentView('financialMOS')} />;
+    return <AssetDetailPage onBack={() => setCurrentView('financialMOS')} userProfile={userProfile} onQuestClick={() => setCurrentView('financialMOS')} />;
   }
 
 
@@ -348,6 +368,237 @@ const SituationPage = ({ onComplete }) => {
   );
 };
 
+const ProfileSetupPage = ({ onBack, onComplete }) => {
+  const [step, setStep] = useState(1);
+  const [profile, setProfile] = useState({
+    branch: '',
+    rank: '',
+    goalAmount: '',
+    futurePlan: ''
+  });
+
+  const branches = [
+    { id: 'army', name: '육군', icon: '🎖️' },
+    { id: 'navy', name: '해군', icon: '⚓' },
+    { id: 'airforce', name: '공군', icon: '✈️' },
+    { id: 'marine', name: '해병대', icon: '🦅' }
+  ];
+
+  const ranks = ['이병', '일병', '상병', '병장'];
+
+  const plans = [
+    { id: 'school', name: '복학', icon: '🎓' },
+    { id: 'travel', name: '해외여행', icon: '✈️' },
+    { id: 'car', name: '내 차 마련', icon: '🚗' },
+    { id: 'home', name: '독립/자취', icon: '🏠' },
+    { id: 'invest', name: '투자 종잣돈', icon: '💰' },
+    { id: 'gift', name: '효도/선물', icon: '🎁' }
+  ];
+
+  const handleGoalChange = (e) => {
+    // Only allow numbers
+    const value = e.target.value.replace(/[^0-9]/g, '');
+    setProfile({ ...profile, goalAmount: value });
+  };
+
+  const isGoalValid = () => {
+    const amount = parseInt(profile.goalAmount || '0', 10);
+    return amount >= 1000000 && amount <= 50000000;
+  };
+
+  const canProceed = () => {
+    if (step === 1 && profile.branch && profile.rank && profile.enlistmentDate) return true;
+    if (step === 2 && isGoalValid() && profile.monthlySpend) return true;
+    if (step === 3 && profile.futurePlan) return true;
+    return false;
+  };
+
+  const handleNext = () => {
+    if (step < 3) setStep(step + 1);
+    else onComplete(profile);
+  };
+
+  return (
+    <div className="app-container" style={{ backgroundColor: 'white', display: 'flex', flexDirection: 'column' }}>
+      <div className="header sticky top-0 bg-white z-10" style={{ display: 'flex', alignItems: 'center', padding: '16px' }}>
+        <button onClick={step === 1 ? onBack : () => setStep(step - 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '10px' }}>
+          <ChevronLeft size={24} color="#333" />
+        </button>
+        <div style={{ flex: 1, height: '4px', backgroundColor: '#f0f0f0', borderRadius: '2px', overflow: 'hidden' }}>
+          <div style={{ width: `${(step / 3) * 100}%`, height: '100%', backgroundColor: '#009490', transition: 'width 0.3s' }}></div>
+        </div>
+        <div style={{ marginLeft: '12px', fontSize: '14px', fontWeight: 'bold', color: '#009490' }}>{step}/3</div>
+      </div>
+
+      <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '8px', color: '#111', lineHeight: '1.4' }}>
+          {step === 1 && <>소속 부대와<br />계급을 알려주세요</>}
+          {step === 2 && <>전역까지<br />얼마를 모으시겠어요?</>}
+          {step === 3 && <>전역 후<br />가장 하고 싶은 일은?</>}
+        </h2>
+        <p style={{ color: '#666', marginBottom: '40px' }}>
+          {step === 1 && '맞춤형 금융 로드맵을 설계해 드립니다.'}
+          {step === 2 && '최소 100만원부터 5,000만원까지 설정 가능해요.'}
+          {step === 3 && '이근준님의 꿈을 응원합니다!'}
+        </p>
+
+        {/* Step 1: Branch & Rank */}
+        {step === 1 && (
+          <div style={{ animation: 'fadeIn 0.5s' }}>
+            <div style={{ marginBottom: '30px' }}>
+              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '12px', color: '#333' }}>소속군</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                {branches.map(b => (
+                  <div key={b.id} onClick={() => setProfile({ ...profile, branch: b.id })}
+                    style={{
+                      padding: '16px', borderRadius: '12px', border: profile.branch === b.id ? '2px solid #009490' : '1px solid #eee',
+                      backgroundColor: profile.branch === b.id ? '#E0F7FA' : 'white', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s'
+                    }}>
+                    <div style={{ fontSize: '24px', marginBottom: '4px' }}>{b.icon}</div>
+                    <div style={{ fontSize: '14px', fontWeight: profile.branch === b.id ? 'bold' : 'normal', color: profile.branch === b.id ? '#009490' : '#666' }}>{b.name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '12px', color: '#333' }}>계급</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {ranks.map(r => (
+                  <button key={r} onClick={() => setProfile({ ...profile, rank: r })}
+                    style={{
+                      flex: 1, padding: '12px 0', borderRadius: '12px', border: 'none',
+                      backgroundColor: profile.rank === r ? '#009490' : '#f5f5f5', color: profile.rank === r ? 'white' : '#666',
+                      fontWeight: 'bold', cursor: 'pointer'
+                    }}>
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginTop: '30px' }}>
+              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '12px', color: '#333' }}>입대일</label>
+              <input
+                type="date"
+                value={profile.enlistmentDate || ''}
+                onChange={(e) => setProfile({ ...profile, enlistmentDate: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: '1px solid #ddd',
+                  fontSize: '16px',
+                  color: '#333',
+                  outline: 'none'
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Goal Amount */}
+        {step === 2 && (
+          <div style={{ animation: 'fadeIn 0.5s' }}>
+            <div style={{ position: 'relative', marginBottom: '10px' }}>
+              <input type="text" value={profile.goalAmount ? parseInt(profile.goalAmount).toLocaleString() : ''}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/,/g, '');
+                  if (!isNaN(val) || val === '') setProfile({ ...profile, goalAmount: val });
+                }}
+                placeholder="20,000,000"
+                style={{ width: '100%', fontSize: '32px', fontWeight: '800', border: 'none', borderBottom: '2px solid #009490', padding: '10px 0', outline: 'none', color: '#009490' }}
+              />
+              <span style={{ position: 'absolute', right: 0, bottom: '15px', fontSize: '20px', fontWeight: 'bold', color: '#333' }}>원</span>
+            </div>
+
+            {/* Validation Message */}
+            {profile.goalAmount && (parseInt(profile.goalAmount) < 1000000 || parseInt(profile.goalAmount) > 50000000) && (
+              <div style={{ color: '#ef4444', fontSize: '13px', marginTop: '8px' }}>⚠️ 100만원 이상 5,000만원 이하로 설정해주세요.</div>
+            )}
+
+            {/* Slider UI */}
+            <div style={{ marginTop: '40px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#888', fontSize: '12px', marginBottom: '12px' }}>
+                <span>100만원</span>
+                <span>5,000만원</span>
+              </div>
+              <div style={{ position: 'relative', height: '24px', display: 'flex', alignItems: 'center' }}>
+                <input
+                  type="range"
+                  min="1000000"
+                  max="50000000"
+                  step="1000000"
+                  value={profile.goalAmount || 20000000}
+                  onChange={(e) => setProfile({ ...profile, goalAmount: e.target.value })}
+                  style={{
+                    width: '100%',
+                    height: '6px',
+                    borderRadius: '3px',
+                    accentColor: '#009490',
+                    cursor: 'pointer',
+                    backgroundColor: '#eee'
+                  }}
+                />
+              </div>
+              <div style={{ textAlign: 'center', fontSize: '12px', color: '#666', marginTop: '8px' }}>
+                좌우로 드래그하여 목표 금액을 설정하세요
+              </div>
+            </div>
+
+            {/* Monthly Expenditure Input */}
+            <div style={{ marginTop: '50px' }}>
+              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '12px', color: '#333' }}>한 달 평균 지출액은?</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  value={profile.monthlySpend ? parseInt(profile.monthlySpend).toLocaleString() : ''}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, '');
+                    setProfile({ ...profile, monthlySpend: val });
+                  }}
+                  placeholder="150,000"
+                  style={{ width: '100%', fontSize: '20px', fontWeight: 'bold', border: '1px solid #ddd', borderRadius: '12px', padding: '16px', outline: 'none', color: '#333' }}
+                />
+                <span style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', fontSize: '16px', fontWeight: 'bold', color: '#888' }}>원</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Future Plan */}
+        {step === 3 && (
+          <div style={{ animation: 'fadeIn 0.5s' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              {plans.map(p => (
+                <div key={p.id} onClick={() => setProfile({ ...profile, futurePlan: p.id })}
+                  style={{
+                    padding: '20px', borderRadius: '16px', border: profile.futurePlan === p.id ? '2px solid #009490' : '1px solid #eee',
+                    backgroundColor: profile.futurePlan === p.id ? '#E0F7FA' : 'white', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
+                  }}>
+                  <div style={{ fontSize: '32px' }}>{p.icon}</div>
+                  <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#333' }}>{p.name}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ padding: '20px' }}>
+        <button onClick={handleNext} disabled={!canProceed()}
+          style={{
+            width: '100%', padding: '16px', borderRadius: '16px', border: 'none',
+            backgroundColor: canProceed() ? '#009490' : '#E0E0E0', color: canProceed() ? 'white' : '#A0A0A0',
+            fontSize: '16px', fontWeight: 'bold', cursor: canProceed() ? 'pointer' : 'not-allowed',
+            boxShadow: canProceed() ? '0 4px 12px rgba(0,148,144,0.3)' : 'none'
+          }}>
+          {step === 3 ? '설정 완료' : '다음'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const FinancialMOSPage = ({ onBack, onAssetDetail }) => {
   const [currentStage, setCurrentStage] = useState(1);
   const [activeMission, setActiveMission] = useState(null);
@@ -586,10 +837,32 @@ const FinancialMOSPage = ({ onBack, onAssetDetail }) => {
   );
 };
 
-const AssetDetailPage = ({ onBack }) => {
+const AssetDetailPage = ({ onBack, userProfile, onQuestClick }) => {
   const [isDischarged, setIsDischarged] = useState(false);
   const [showAiReport, setShowAiReport] = useState(false);
   const [aiAnalyzing, setAiAnalyzing] = useState(false);
+
+  const [showBubble, setShowBubble] = useState(true);
+
+  // Set default goal if not provided (e.g. direct access or skipped)
+  const goalAmount = userProfile?.goalAmount ? parseInt(userProfile.goalAmount, 10) : 20000000;
+  const currentAsset = 1250000; // Fixed for now as requested
+  const percent = Math.min((currentAsset / goalAmount) * 100, 100).toFixed(1);
+
+  const disciplinedMessages = [
+    "이번 휴가비,\n10만원만 아껴볼까요?",
+    "PX 냉동 3번 참으면\n주식 1주 GET! 🍗",
+    "군적금 만기되면\n여행 갈까요? ✈️"
+  ];
+  const societyMessages = [
+    "오늘 택시 대신\n따릉이 어때요? 🚲",
+    "커피 1잔 값,\n미니 펀드에 쏙! ☕",
+    "배달비 2만원 절약\n이번주 도전? 🛵"
+  ];
+
+  const insightMessage = isDischarged
+    ? societyMessages[Math.floor(Math.random() * societyMessages.length)]
+    : disciplinedMessages[Math.floor(Math.random() * disciplinedMessages.length)];
 
   const handleAiDiagnosis = () => {
     setAiAnalyzing(true);
@@ -637,6 +910,15 @@ const AssetDetailPage = ({ onBack }) => {
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', marginTop: '30px', position: 'relative' }}>
 
+        {/* Short-term Insight Bubble (Left of Character) */}
+        {showBubble && (
+          <div style={{ position: 'absolute', top: '100px', left: '20px', backgroundColor: 'white', padding: '12px 16px', borderRadius: '20px 20px 0 20px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', animation: 'bounceIn 0.8s', zIndex: 20, maxWidth: '140px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 'bold', lineHeight: '1.4', color: '#333', whiteSpace: 'pre-line' }}>{insightMessage}</div>
+            <button onClick={() => setShowBubble(false)} style={{ position: 'absolute', top: '-8px', right: '-8px', width: '20px', height: '20px', backgroundColor: '#ddd', borderRadius: '50%', border: 'none', color: '#666', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+            <div style={{ position: 'absolute', bottom: '-8px', right: '0', width: '0', height: '0', borderLeft: '10px solid transparent', borderTop: '10px solid white' }}></div>
+          </div>
+        )}
+
         {/* Service D-Day Badge (Top Left) */}
         <div style={{ position: 'absolute', top: '10px', left: '20px' }}>
           <div style={{ backgroundColor: isDischarged ? '#4CAF50' : '#262626', color: 'white', padding: '6px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '800', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
@@ -650,6 +932,16 @@ const AssetDetailPage = ({ onBack }) => {
             <div style={{ position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: isDischarged ? '6px solid #4CAF50' : '6px solid #009490' }}></div>
           </div>
           <img src={isDischarged ? soldierDischargeImg : soldierImg} alt="군인" style={{ width: '180px', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.15))' }} />
+
+          {/* Floating Quest Button (Next to Character) */}
+          <div onClick={onQuestClick} style={{ position: 'absolute', top: '5%', right: '-100px', transform: 'translateY(-50%)', zIndex: 10, cursor: 'pointer', animation: 'float 2s ease-in-out infinite', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ width: '50px', height: '50px', borderRadius: '50%', backgroundColor: '#FFD700', boxShadow: '0 4px 12px rgba(255, 215, 0, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px solid white' }}>
+              <span style={{ fontSize: '28px' }}>🪙</span>
+            </div>
+            <div style={{ marginTop: '4px', backgroundColor: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold', color: '#333', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+              보너스
+            </div>
+          </div>
         </div>
 
         {/* Percent Bars Container */}
@@ -682,18 +974,60 @@ const AssetDetailPage = ({ onBack }) => {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '15px', fontWeight: 'bold', color: '#111' }}>
               <span>총 자산 달성률</span>
-              <span style={{ color: isDischarged ? '#4CAF50' : '#009490' }}>{isDischarged ? '100%' : '34%'}</span>
+              <span style={{ color: isDischarged ? '#4CAF50' : '#009490' }}>{percent}%</span>
             </div>
             <div style={{ height: '14px', backgroundColor: '#E5E7EB', borderRadius: '7px', overflow: 'hidden' }}>
-              <div style={{ width: isDischarged ? '100%' : '34%', height: '100%', backgroundColor: isDischarged ? '#4CAF50' : '#009490', borderRadius: '7px', transition: 'width 1s ease-in-out' }}></div>
+              <div style={{ width: `${percent}%`, height: '100%', backgroundColor: isDischarged ? '#4CAF50' : '#009490', borderRadius: '7px', transition: 'width 1s ease-in-out' }}></div>
             </div>
             <div style={{ marginTop: '6px', fontSize: '12px', color: '#6B7280', textAlign: 'right' }}>
-              {isDischarged
-                ? <span>목표 <span style={{ fontWeight: 'bold', color: '#111' }}>1,000만원</span> <span style={{ fontWeight: 'bold', color: '#4CAF50' }}>달성 완료!</span></span>
-                : <span>목표 <span style={{ fontWeight: 'bold', color: '#111' }}>1,000만원</span> 중 <span style={{ fontWeight: 'bold', color: '#009490' }}>345만원</span> 모았어요!</span>
-              }
+              {currentAsset.toLocaleString()} / {goalAmount.toLocaleString()}원
             </div>
           </div>
+
+          {/* Narasarang Account Card */}
+          <div style={{ marginTop: '20px', backgroundColor: 'white', borderRadius: '16px', padding: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '40px', height: '40px', backgroundColor: '#E0F7FA', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Wallet size={20} color="#009490" />
+              </div>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#333' }}>하나 나라사랑우대통장</div>
+                <div style={{ fontSize: '12px', color: '#888' }}>123-***-******</div>
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#009490' }}>{currentAsset.toLocaleString()}원</div>
+            </div>
+          </div>
+
+          {/* Recent Transactions List */}
+          <div style={{ marginTop: '12px', padding: '0 8px' }}>
+            <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#666', marginBottom: '8px' }}>최근 거래내역</div>
+            <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+              {[
+                { date: '10.15', name: '충성마트(PX)', amount: -12500 },
+                { date: '10.12', name: '코레일', amount: -34800 },
+                { date: '10.08', name: 'GS25', amount: -4500 },
+                { date: '10.05', name: '배달의민족', amount: -22000 },
+                { date: '10.01', name: '올리브영', amount: -18900 },
+              ].map((item, index) => (
+                <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: index < 4 ? '1px solid #f5f5f5' : 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ fontSize: '12px', color: '#888', width: '35px' }}>{item.date}</div>
+                    <div style={{ fontSize: '14px', fontWeight: '500', color: '#333' }}>{item.name}</div>
+                  </div>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#333' }}>
+                    {item.amount.toLocaleString()}원
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+
+
+          {/* Floating Quest Button */}
+
 
           {/* AI Analysis Result Area (Conditional) */}
           {aiAnalyzing && (
@@ -777,7 +1111,7 @@ const AssetDetailPage = ({ onBack }) => {
         </div>
       </div>
       <BottomNav />
-    </div>
+    </div >
   );
 };
 

@@ -9,6 +9,10 @@
   --border-color: #ededed;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   background-color: #f0f0f0;
   display: flex;
@@ -312,4 +316,18 @@ body {
   font-weight: bold;
   font-size: 13px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
 }
