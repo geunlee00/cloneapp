@@ -63,7 +63,16 @@ function App() {
   }
 
   if (currentView === 'lounge') {
-    return <MilitaryLoungePage onBack={() => setCurrentView('home')} onSoldierClick={() => setCurrentView('profileSetup')} />;
+    return <MilitaryLoungePage
+      onBack={() => setCurrentView('home')}
+      onSoldierClick={() => {
+        if (userProfile && userProfile.goalAmount) {
+          setCurrentView('assetDetail');
+        } else {
+          setCurrentView('profileSetup');
+        }
+      }}
+    />;
   }
 
   if (currentView === 'profileSetup') {
@@ -86,6 +95,10 @@ function App() {
     return <AssetDetailPage onBack={() => setCurrentView('financialMOS')} userProfile={userProfile} onQuestClick={() => setCurrentView('financialMOS')} />;
   }
 
+  if (currentView === 'survival') {
+    return <SurvivalRunwayPage onBack={() => setCurrentView('home')} userProfile={userProfile} />;
+  }
+
 
   return (
     <div className="app-container">
@@ -93,7 +106,19 @@ function App() {
       <div className="content-scroll">
         <PromoBanner />
         <MainAccount />
-        <QuickCards onRankClick={() => setCurrentView('report')} onLoungeClick={() => setCurrentView('lounge')} />
+
+        {/* Survival Runway Card (Home Dashboard) */}
+        <QuickCards
+          onRankClick={() => setCurrentView('report')}
+          onLoungeClick={() => setCurrentView('lounge')}
+          onRunwayClick={() => {
+            if (userProfile && userProfile.goalAmount) {
+              setCurrentView('survival');
+            } else {
+              setCurrentView('survival');
+            }
+          }}
+        />
         <MarketingBanner />
       </div>
       <BottomNav />
@@ -599,6 +624,143 @@ const ProfileSetupPage = ({ onBack, onComplete }) => {
   );
 };
 
+// ----------------------------------------------------------------------
+// NEW: Survival Runway Page
+// ----------------------------------------------------------------------
+const SurvivalRunwayPage = ({ onBack, userProfile }) => {
+  const [policies, setPolicies] = useState({
+    rent: false,
+    learning: false
+  });
+
+  // Logic Reuse
+  const currentAsset = 1250000;
+  const monthlySpendVal = userProfile?.monthlySpend ? parseInt(String(userProfile.monthlySpend).replace(/,/g, ''), 10) : 0;
+  // Default spend or user input
+  const baseSpend = monthlySpendVal > 0 ? monthlySpendVal : 150000;
+
+  // Calculate Savings from Policies
+  let monthlySavings = 0;
+  if (policies.rent) monthlySavings += 200000; // Youth Rent Support (~200k)
+  if (policies.learning) monthlySavings += 300000; // Learning Card (avg training cost saved)
+
+  // Effective Spend (Minimum 50k to prevent div by zero/infinite)
+  const effectiveSpend = Math.max(baseSpend - monthlySavings, 50000);
+
+  // Runway Calculation
+  const runwayMonths = currentAsset / effectiveSpend;
+  const runwayMonthsInt = Math.floor(runwayMonths);
+  const runwayDays = Math.floor((runwayMonths - runwayMonthsInt) * 30);
+
+  // Base Runway (for comparison)
+  const baseRunwayMonths = currentAsset / baseSpend;
+  const baseRunwayMonthsInt = Math.floor(baseRunwayMonths);
+
+  // Extension Gain
+  const gainedMonths = runwayMonthsInt - baseRunwayMonthsInt;
+
+  // Status
+  let status = "안전";
+  let statusColor = "#4CAF50";
+
+  if (runwayMonths < 3) { status = "🚨 위험"; statusColor = "#ff4d4f"; }
+  else if (runwayMonths < 6) { status = "⚠️ 주의"; statusColor = "#faad14"; }
+
+  const gaugePercent = Math.min((runwayMonths / 6) * 100, 100);
+
+  const togglePolicy = (key) => {
+    setPolicies(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  return (
+    <div className="app-container" style={{ backgroundColor: '#fff', display: 'flex', flexDirection: 'column' }}>
+      <div className="header sticky top-0 bg-white z-10" style={{ display: 'flex', alignItems: 'center', padding: '16px', borderBottom: '1px solid #eee' }}>
+        <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '10px' }}><ChevronLeft size={24} color="#333" /></button>
+        {/* Animated Title for effect */}
+        <h1 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#333', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          자금 생존기간 상세 {gainedMonths > 0 && <span style={{ fontSize: '12px', backgroundColor: '#e6f4ff', color: '#009490', padding: '2px 8px', borderRadius: '12px' }}>+{gainedMonths}개월 연장됨!</span>}
+        </h1>
+      </div>
+      <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: '30px', marginTop: '10px' }}>
+          <div style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>현재 자산으로 버틸 수 있는 기간</div>
+          <div style={{ fontSize: '36px', fontWeight: '800', color: statusColor, transition: 'all 0.3s' }}>
+            {runwayMonthsInt}개월 {runwayDays}일
+          </div>
+
+          {/* Dynamic Badge */}
+          <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'center', gap: '8px' }}>
+            <div style={{ fontSize: '14px', fontWeight: 'bold', backgroundColor: `${statusColor}20`, color: statusColor, padding: '6px 16px', borderRadius: '20px' }}>
+              상태: {status}
+            </div>
+            {monthlySavings > 0 && (
+              <div style={{ fontSize: '14px', fontWeight: 'bold', backgroundColor: '#FFF3E0', color: '#F57C00', padding: '6px 16px', borderRadius: '20px' }}>
+                월 {monthlySavings.toLocaleString()}원 절약 효과
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div style={{ backgroundColor: '#f9f9f9', padding: '24px', borderRadius: '16px', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <span style={{ fontSize: '14px', color: '#555' }}>보유 자산</span>
+            <span style={{ fontSize: '16px', fontWeight: 'bold' }}>{currentAsset.toLocaleString()}원</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '12px', marginBottom: '12px' }}>
+            <span style={{ fontSize: '14px', color: '#555' }}>예상 월 지출</span>
+            <span style={{ fontSize: '16px', fontWeight: 'bold', color: monthlySavings > 0 ? '#009490' : '#333' }}>
+              {effectiveSpend.toLocaleString()}원 {monthlySavings > 0 && <span style={{ fontSize: '12px', textDecoration: 'line-through', color: '#999' }}>({baseSpend.toLocaleString()})</span>}
+            </span>
+          </div>
+
+          <div style={{ fontSize: '13px', color: '#888', lineHeight: '1.5' }}>
+            * 입력하신 월 지출액에서 정책 지원금을 차감하여 계산했습니다.
+          </div>
+        </div>
+
+        <div style={{ textAlign: 'center' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', color: '#333', textAlign: 'left' }}>🛡️ 생존 기간 늘리기 (정책 시뮬레이션)</h3>
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {/* Policy 1: Rent Support */}
+            <div onClick={() => togglePolicy('rent')} style={{
+              border: policies.rent ? '2px solid #009490' : '1px solid #eee',
+              backgroundColor: policies.rent ? '#E0F2F1' : 'white',
+              borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transition: 'all 0.2s'
+            }}>
+              <div style={{ fontSize: '24px' }}>🏠</div>
+              <div style={{ textAlign: 'left', flex: 1 }}>
+                <div style={{ fontWeight: 'bold', fontSize: '14px', color: policies.rent ? '#009490' : '#333' }}>청년월세지원 신청</div>
+                <div style={{ fontSize: '12px', color: '#666' }}>월 20만원 임대료 지원 받기</div>
+              </div>
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: policies.rent ? '6px solid #009490' : '2px solid #ddd', boxSizing: 'border-box' }}></div>
+            </div>
+
+            {/* Policy 2: Learning Card */}
+            <div onClick={() => togglePolicy('learning')} style={{
+              border: policies.learning ? '2px solid #009490' : '1px solid #eee',
+              backgroundColor: policies.learning ? '#E0F2F1' : 'white',
+              borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transition: 'all 0.2s'
+            }}>
+              <div style={{ fontSize: '24px' }}>💳</div>
+              <div style={{ textAlign: 'left', flex: 1 }}>
+                <div style={{ fontWeight: 'bold', fontSize: '14px', color: policies.learning ? '#009490' : '#333' }}>내일배움카드 활용</div>
+                <div style={{ fontSize: '12px', color: '#666' }}>학원/강의비 월 30만원 방어</div>
+              </div>
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: policies.learning ? '6px solid #009490' : '2px solid #ddd', boxSizing: 'border-box' }}></div>
+            </div>
+          </div>
+          {/* Simulation Feedback */}
+          {monthlySavings > 0 && (
+            <div style={{ marginTop: '20px', padding: '12px', backgroundColor: '#FFF8E1', borderRadius: '12px', color: '#F57C00', fontSize: '13px', fontWeight: 'bold', animation: 'fadeIn 0.5s' }}>
+              💡 정책 활용으로 생존 기간이 <span style={{ fontSize: '16px', textDecoration: 'underline' }}>{gainedMonths}개월</span> 늘어났어요!
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const FinancialMOSPage = ({ onBack, onAssetDetail }) => {
   const [currentStage, setCurrentStage] = useState(1);
   const [activeMission, setActiveMission] = useState(null);
@@ -951,10 +1113,6 @@ const AssetDetailPage = ({ onBack, userProfile, onQuestClick }) => {
           <div style={{ marginBottom: '30px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
               <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#111' }}>{isDischarged ? '전역 자산 포트폴리오' : '자산 포트폴리오'}</span>
-              {/* AI Diagnosis Trigger Button */}
-              <button onClick={handleAiDiagnosis} style={{ backgroundColor: isDischarged ? '#4CAF50' : '#009490', color: 'white', border: 'none', borderRadius: '20px', padding: '6px 12px', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-                <Sparkles size={12} /> AI 정밀 진단
-              </button>
             </div>
             {/* Segmented Bar */}
             <div style={{ height: '20px', backgroundColor: '#F3F4F6', borderRadius: '10px', overflow: 'hidden', display: 'flex' }}>
@@ -1028,6 +1186,37 @@ const AssetDetailPage = ({ onBack, userProfile, onQuestClick }) => {
 
           {/* Floating Quest Button */}
 
+
+
+          {/* New AI Diagnosis Button */}
+          <div style={{ marginTop: '24px', padding: '0 8px' }}>
+            <button
+              onClick={handleAiDiagnosis}
+              style={{
+                width: '100%',
+                backgroundColor: isDischarged ? '#4CAF50' : '#009490',
+                color: 'white',
+                border: 'none',
+                borderRadius: '16px',
+                padding: '16px',
+                fontSize: '16px',
+                fontWeight: '800',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                transition: 'transform 0.2s'
+              }}
+              onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+              onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              <Sparkles size={20} color="white" />
+              <span>AI 자산 의무관에게 정밀 진단 받기</span>
+            </button>
+          </div>
 
           {/* AI Analysis Result Area (Conditional) */}
           {aiAnalyzing && (
@@ -1229,31 +1418,33 @@ const MainAccount = () => (
   </div>
 );
 
-const QuickCards = ({ onRankClick, onLoungeClick }) => (
+const QuickCards = ({ onRankClick, onLoungeClick, onRunwayClick }) => (
   <div className="quick-cards-scroll">
     <div onClick={onRankClick}>
       <Card
         bgColor="#e6f6e6"
         icon="📊"
-        title="나의 금융 계급은?"
-        subtitle="상위 10% 도전하기"
+        title="나의 금융 계급"
+        subtitle="상위 10% 도전"
         link="리포트 보기 >"
       />
     </div>
-    <Card
-      bgColor="#e6f0fa"
-      icon="🎠"
-      title="혜택이 좋아요"
-      subtitle="놀이터"
-      link="자세히보기 >"
-    />
-    <div onClick={onLoungeClick}>
+    <div onClick={onRunwayClick}>
       <Card
         bgColor="#fff0f5"
+        icon="⏳"
+        title="자금 생존 기간"
+        subtitle="전역 후 버티기"
+        link="시뮬레이션 >"
+      />
+    </div>
+    <div onClick={onLoungeClick}>
+      <Card
+        bgColor="#e6f0fa"
         icon="⛺"
-        title="PX보다 달콤한"
-        subtitle="밀리터리 라운지"
-        link="자세히보기 >"
+        title="밀리터리 라운지"
+        subtitle="내 자산 관리"
+        link="입장하기 >"
       />
     </div>
   </div>
