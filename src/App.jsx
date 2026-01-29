@@ -1,6 +1,9 @@
 
 import React, { useState } from 'react';
 import gunbbangImg from './assets/images/gunbbang.png';
+import runwayDangerImg from './assets/runway_danger.png';
+import runwayWarningImg from './assets/runway_warning.png';
+import runwaySafeImg from './assets/runway_safe.png';
 import {
   User,
   Wallet,
@@ -21,7 +24,8 @@ import {
   Lock,
   Settings,
   Ticket,
-  Sparkles
+  Sparkles,
+  X
 } from 'lucide-react';
 
 import militaryPxImg from './assets/images/military_px.png';
@@ -625,24 +629,201 @@ const ProfileSetupPage = ({ onBack, onComplete }) => {
 };
 
 // ----------------------------------------------------------------------
-// NEW: Survival Runway Page
+// Strategy Meeting Modal (Contextual Curation)
 // ----------------------------------------------------------------------
+const StrategyMeetingModal = ({ onClose, onComplete }) => {
+  const [step, setStep] = useState(1);
+  const [context, setContext] = useState({
+    housing: '', // wallse, jeonse, parents
+    job: '',     // unemployed, employed, student
+    location: '' // seoul, etc
+  });
+
+  const handleSelect = (key, value) => {
+    setContext(prev => ({ ...prev, [key]: value }));
+  };
+
+  const nextStep = () => {
+    if (step < 3) setStep(step + 1);
+    else onComplete(context);
+  };
+
+  return (
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+      <div style={{ backgroundColor: '#fff', width: '100%', maxWidth: '340px', borderRadius: '20px', padding: '24px', animation: 'slideUp 0.3s' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 'bold' }}>🛡️ 지출 방어 작전 회의</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none' }}><X size={20} /></button>
+        </div>
+
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ fontSize: '14px', color: '#666', marginBottom: '12px' }}>
+            Q{step}. {step === 1 ? '현재 어떤 형태로 거주 중인가요?' : step === 2 ? '현재 직업 상태는?' : '거주 지역은 어디인가요?'}
+          </div>
+
+          <div style={{ display: 'grid', gap: '8px' }}>
+            {step === 1 && (
+              <>
+                <button onClick={() => handleSelect('housing', 'wallse')} style={{ padding: '12px', borderRadius: '12px', border: context.housing === 'wallse' ? '2px solid #008485' : '1px solid #eee', backgroundColor: context.housing === 'wallse' ? '#E0F2F1' : '#fff', fontWeight: 'bold' }}>월세 살아요 💸</button>
+                <button onClick={() => handleSelect('housing', 'jeonse')} style={{ padding: '12px', borderRadius: '12px', border: context.housing === 'jeonse' ? '2px solid #008485' : '1px solid #eee', backgroundColor: context.housing === 'jeonse' ? '#E0F2F1' : '#fff', fontWeight: 'bold' }}>전세 살아요 🏠</button>
+                <button onClick={() => handleSelect('housing', 'parents')} style={{ padding: '12px', borderRadius: '12px', border: context.housing === 'parents' ? '2px solid #008485' : '1px solid #eee', backgroundColor: context.housing === 'parents' ? '#E0F2F1' : '#fff', fontWeight: 'bold' }}>본가 등 기타 👨‍👩‍👧</button>
+              </>
+            )}
+            {step === 2 && (
+              <>
+                <button onClick={() => handleSelect('job', 'unemployed')} style={{ padding: '12px', borderRadius: '12px', border: context.job === 'unemployed' ? '2px solid #008485' : '1px solid #eee', backgroundColor: context.job === 'unemployed' ? '#E0F2F1' : '#fff', fontWeight: 'bold' }}>취준생 (구직 중) 🔍</button>
+                <button onClick={() => handleSelect('job', 'employed')} style={{ padding: '12px', borderRadius: '12px', border: context.job === 'employed' ? '2px solid #008485' : '1px solid #eee', backgroundColor: context.job === 'employed' ? '#E0F2F1' : '#fff', fontWeight: 'bold' }}>직장인 / 프리랜서 💼</button>
+                <button onClick={() => handleSelect('job', 'student')} style={{ padding: '12px', borderRadius: '12px', border: context.job === 'student' ? '2px solid #008485' : '1px solid #eee', backgroundColor: context.job === 'student' ? '#E0F2F1' : '#fff', fontWeight: 'bold' }}>학생 🎓</button>
+              </>
+            )}
+            {step === 3 && (
+              <>
+                <button onClick={() => handleSelect('location', 'seoul')} style={{ padding: '12px', borderRadius: '12px', border: context.location === 'seoul' ? '2px solid #008485' : '1px solid #eee', backgroundColor: context.location === 'seoul' ? '#E0F2F1' : '#fff', fontWeight: 'bold' }}>서울 특별시 🏙️</button>
+                <button onClick={() => handleSelect('location', 'others')} style={{ padding: '12px', borderRadius: '12px', border: context.location === 'others' ? '2px solid #008485' : '1px solid #eee', backgroundColor: context.location === 'others' ? '#E0F2F1' : '#fff', fontWeight: 'bold' }}>그 외 지역 🏞️</button>
+              </>
+            )}
+          </div>
+        </div>
+
+        <button onClick={nextStep} style={{ width: '100%', padding: '16px', borderRadius: '14px', backgroundColor: '#008485', color: 'white', border: 'none', fontSize: '16px', fontWeight: 'bold' }}>
+          {step === 3 ? '결과 확인하기' : '다음'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const SurvivalRunwayPage = ({ onBack, userProfile }) => {
+  const [showMeeting, setShowMeeting] = useState(false);
+  const [userContext, setUserContext] = useState(null); // { housing, job, location }
+
+  // Initial Policies State (All False initially)
   const [policies, setPolicies] = useState({
     rent: false,
-    learning: false
+    smeLoan: false,
+    learning: false,
+    deposit: false // Guaranteed Return
+  });
+
+  // Policy Database
+  const ALL_POLICIES = [
+    {
+      id: 'rent', title: '청년월세 특별지원', desc: '월 20만원 지원 (Runway +3개월)',
+      saveAmount: 200000, icon: '🏠',
+      condition: (ctx) => !ctx || ctx.housing === 'wallse'
+    },
+    {
+      id: 'smeLoan', title: '중소기업 청년 전세대출', desc: '월세→전세 전환 (월 30만원 절약)',
+      saveAmount: 300000, icon: '🏦',
+      condition: (ctx) => !ctx || (ctx.housing === 'wallse' && ctx.job === 'employed')
+    },
+    {
+      id: 'learning', title: '내일배움카드', desc: '학원비 방어 (월 30만원)',
+      saveAmount: 300000, icon: '💳',
+      condition: (ctx) => !ctx || (ctx.job === 'unemployed' || ctx.job === 'student')
+    },
+    {
+      id: 'deposit', title: '청년 전세보증금 반환보증', desc: '전세 사기 예방 (멘탈 방어)',
+      saveAmount: 0, icon: '🛡️',
+      condition: (ctx) => ctx && ctx.housing === 'jeonse'
+    },
+    {
+      id: 'kpass', title: 'K-패스 / 기후동행카드', desc: '교통비 30% 환급 (월 2~3만원)',
+      saveAmount: 20000, icon: '🚌',
+      condition: (ctx) => true // All
+    }
+  ];
+
+  // Boot Camp Database
+  const ALL_BOOTCAMPS = [
+    {
+      id: 'transfer', title: '전입신고 & 확정일자 받기',
+      desc: '보증금 보호 필수! (과태료 방지)',
+      saveAmount: 0,
+      condition: (ctx) => !ctx || (ctx.housing === 'wallse' || ctx.housing === 'jeonse')
+    },
+    {
+      id: 'card', title: '기후동행카드 발급',
+      desc: '서울시민 필수템 (교통비 방어, 월 6만원 효과)',
+      saveAmount: 60000,
+      condition: (ctx) => !ctx || (ctx.location === 'seoul')
+    },
+    {
+      id: 'subs', title: '숨만 쉬어도 나가는 구독 해지',
+      desc: 'OTT, 멤버십 다이어트 (월 1.5만원 절약)',
+      saveAmount: 15000,
+      condition: (ctx) => true // Universal
+    },
+    {
+      id: 'limit', title: '체크카드 결제한도 3만원 설정',
+      desc: '강제 절약 모드! (지출 통제 훈련)',
+      saveAmount: 0,
+      condition: (ctx) => true // Universal
+    },
+    {
+      id: 'phone', title: '알뜰폰 요금제로 변경',
+      desc: '데이터 무제한도 반값! (월 3만원 절약)',
+      saveAmount: 30000,
+      condition: (ctx) => true // Universal
+    }
+  ];
+
+  // Financial Products Database (Counterattack)
+  const ALL_PRODUCTS = [
+    {
+      id: 'doyak', title: '청년도약계좌',
+      desc: '5년 만기, 최대 5,000만원 목돈 마련',
+      tag: '시드머니', icon: '💰',
+      condition: (months) => months >= 6 // Safe status
+    },
+    {
+      id: 'daldal', title: '달달하나 통장 (파킹)',
+      desc: '최대 연 3.0%, 비상금 넣어두기 딱!',
+      tag: '비상금', icon: '🍯',
+      condition: (months) => months >= 3 // Warning can start
+    },
+    {
+      id: 'house', title: '주택청약종합저축',
+      desc: '내 집 마련의 첫걸음, 무조건 보유',
+      tag: '필수', icon: '🏠',
+      condition: () => true // Always
+    },
+    {
+      id: 'minus', title: '하나 비상금대출 (한도조회)',
+      desc: '실행 X! 급할 때를 대비해 한도만 확인 (심리적 안전판)',
+      tag: '비상용', icon: '🚨',
+      condition: () => true // Always visible as safety net
+    }
+  ];
+
+  const [bootcamp, setBootcamp] = useState({
+    transfer: false,
+    card: false,
+    subs: false,
+    limit: false,
+    phone: false
   });
 
   // Logic Reuse
   const currentAsset = 1250000;
   const monthlySpendVal = userProfile?.monthlySpend ? parseInt(String(userProfile.monthlySpend).replace(/,/g, ''), 10) : 0;
   // Default spend or user input
-  const baseSpend = monthlySpendVal > 0 ? monthlySpendVal : 150000;
+  const baseSpend = monthlySpendVal > 0 ? monthlySpendVal : 800000; // Persona Default: 800k
+
+  // Filter Policies & Bootcamps
+  const filteredPolicies = ALL_POLICIES.filter(p => !userContext || p.condition(userContext));
+  const filteredBootcamps = ALL_BOOTCAMPS.filter(b => !userContext || b.condition(userContext));
 
   // Calculate Savings from Policies
   let monthlySavings = 0;
-  if (policies.rent) monthlySavings += 200000; // Youth Rent Support (~200k)
-  if (policies.learning) monthlySavings += 300000; // Learning Card (avg training cost saved)
+  filteredPolicies.forEach(p => {
+    if (policies[p.id]) monthlySavings += p.saveAmount;
+  });
+
+  // Bootcamp Savings
+  filteredBootcamps.forEach(b => {
+    if (bootcamp[b.id]) monthlySavings += b.saveAmount;
+  });
 
   // Effective Spend (Minimum 50k to prevent div by zero/infinite)
   const effectiveSpend = Math.max(baseSpend - monthlySavings, 50000);
@@ -659,12 +840,22 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
   // Extension Gain
   const gainedMonths = runwayMonthsInt - baseRunwayMonthsInt;
 
-  // Status
+  // Status & Diagnosis
   let status = "안전";
   let statusColor = "#4CAF50";
+  let diagnosisMsg = "아직은 여유가 있습니다.";
+  let bgTheme = "office"; // office, gosiwon
 
-  if (runwayMonths < 3) { status = "🚨 위험"; statusColor = "#ff4d4f"; }
-  else if (runwayMonths < 6) { status = "⚠️ 주의"; statusColor = "#faad14"; }
+  if (runwayMonths < 3) {
+    status = "🚨 파산 위험";
+    statusColor = "#ff4d4f";
+    diagnosisMsg = `현재 고정비 유지 시, D-${Math.floor(runwayMonths * 30)}일 뒤 파산합니다.`;
+    // bgTheme removed
+  } else if (runwayMonths < 6) {
+    status = "⚠️ 주의";
+    statusColor = "#faad14";
+    diagnosisMsg = "고정비를 줄이지 않으면 위험해요.";
+  }
 
   const gaugePercent = Math.min((runwayMonths / 6) * 100, 100);
 
@@ -672,13 +863,23 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
     setPolicies(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const toggleBootcamp = (key) => {
+    setBootcamp(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleMeetingComplete = (ctx) => {
+    setUserContext(ctx);
+    setShowMeeting(false);
+    setPolicies({});
+  };
+
   return (
     <div className="app-container" style={{ backgroundColor: '#fff', display: 'flex', flexDirection: 'column' }}>
-      <div className="header sticky top-0 bg-white z-10" style={{ display: 'flex', alignItems: 'center', padding: '16px', borderBottom: '1px solid #eee' }}>
+      {showMeeting && <StrategyMeetingModal onClose={() => setShowMeeting(false)} onComplete={handleMeetingComplete} />}
+      <div className="header sticky top-0 z-10" style={{ backgroundColor: '#fff', display: 'flex', alignItems: 'center', padding: '16px', borderBottom: '1px solid #eee', color: '#333' }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '10px' }}><ChevronLeft size={24} color="#333" /></button>
-        {/* Animated Title for effect */}
-        <h1 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#333', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          자금 생존기간 상세 {gainedMonths > 0 && <span style={{ fontSize: '12px', backgroundColor: '#e6f4ff', color: '#009490', padding: '2px 8px', borderRadius: '12px' }}>+{gainedMonths}개월 연장됨!</span>}
+        <h1 style={{ fontSize: '18px', fontWeight: '700', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+          하나 런웨이 {gainedMonths > 0 && <span style={{ fontSize: '12px', backgroundColor: '#e6f4ff', color: '#008485', padding: '2px 8px', borderRadius: '12px' }}>+{gainedMonths}개월 연장!</span>}
         </h1>
       </div>
       <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
@@ -688,73 +889,113 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
             {runwayMonthsInt}개월 {runwayDays}일
           </div>
 
-          {/* Dynamic Badge */}
-          <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'center', gap: '8px' }}>
-            <div style={{ fontSize: '14px', fontWeight: 'bold', backgroundColor: `${statusColor}20`, color: statusColor, padding: '6px 16px', borderRadius: '20px' }}>
-              상태: {status}
-            </div>
-            {monthlySavings > 0 && (
-              <div style={{ fontSize: '14px', fontWeight: 'bold', backgroundColor: '#FFF3E0', color: '#F57C00', padding: '6px 16px', borderRadius: '20px' }}>
-                월 {monthlySavings.toLocaleString()}원 절약 효과
-              </div>
-            )}
+          {/* Gamification Image */}
+          <div style={{ margin: '20px auto', width: '250px', height: '250px', borderRadius: '16px', overflow: 'hidden', border: `4px solid ${statusColor}`, transition: 'all 0.5s', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+            <img
+              src={runwayMonths < 3 ? runwayDangerImg : (runwayMonths < 6 ? runwayWarningImg : runwaySafeImg)}
+              alt="Character State"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
           </div>
+
+          <div style={{ marginTop: '12px', color: statusColor, fontWeight: 'bold', fontSize: '15px' }}>
+            "{diagnosisMsg}"
+          </div>
+
+          {monthlySavings > 0 && (
+            <div style={{ marginTop: '12px', fontSize: '14px', fontWeight: 'bold', backgroundColor: '#FFF3E0', color: '#F57C00', padding: '6px 16px', borderRadius: '20px', display: 'inline-block' }}>
+              월 {monthlySavings.toLocaleString()}원 절약 중
+            </div>
+          )}
         </div>
 
-        <div style={{ backgroundColor: '#f9f9f9', padding: '24px', borderRadius: '16px', marginBottom: '24px' }}>
+        {/* Asset Summary */}
+        <div style={{ backgroundColor: '#f9f9f9', padding: '24px', borderRadius: '16px', marginBottom: '24px', color: '#333' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <span style={{ fontSize: '14px', color: '#555' }}>보유 자산</span>
+            <span style={{ fontSize: '14px', color: '#555' }}>보유 자산 (Seed)</span>
             <span style={{ fontSize: '16px', fontWeight: 'bold' }}>{currentAsset.toLocaleString()}원</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '12px', marginBottom: '12px' }}>
-            <span style={{ fontSize: '14px', color: '#555' }}>예상 월 지출</span>
-            <span style={{ fontSize: '16px', fontWeight: 'bold', color: monthlySavings > 0 ? '#009490' : '#333' }}>
+            <span style={{ fontSize: '14px', color: '#555' }}>예상 월 지출 (Burn Rate)</span>
+            <span style={{ fontSize: '16px', fontWeight: 'bold', color: monthlySavings > 0 ? '#009490' : 'inherit' }}>
               {effectiveSpend.toLocaleString()}원 {monthlySavings > 0 && <span style={{ fontSize: '12px', textDecoration: 'line-through', color: '#999' }}>({baseSpend.toLocaleString()})</span>}
             </span>
           </div>
+        </div>
 
-          <div style={{ fontSize: '13px', color: '#888', lineHeight: '1.5' }}>
-            * 입력하신 월 지출액에서 정책 지원금을 차감하여 계산했습니다.
+        {/* Tactical Guide */}
+        <div style={{ marginBottom: '30px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#333', margin: 0 }}>🛡️ 지출 방어 솔루션</h3>
+            <button onClick={() => setShowMeeting(true)} style={{ fontSize: '12px', backgroundColor: '#333', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Target size={12} /> 작전 회의 {userContext ? '다시하기' : '시작'}
+            </button>
+          </div>
+
+          {!userContext && (
+            <div style={{ padding: '20px', backgroundColor: '#E0F2F1', borderRadius: '12px', textAlign: 'center', marginBottom: '12px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#008485', marginBottom: '4px' }}>아직 내 상황에 맞는 정책을 모르시나요?</div>
+              <div style={{ fontSize: '12px', color: '#555' }}>작전 회의를 통해 딱 맞는 방어구를 찾아보세요!</div>
+            </div>
+          )}
+
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {filteredPolicies.map(policy => (
+              <div key={policy.id} onClick={() => togglePolicy(policy.id)} style={{
+                border: policies[policy.id] ? '2px solid #008485' : '1px solid #eee',
+                backgroundColor: policies[policy.id] ? '#E0F2F1' : 'white',
+                borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}>
+                <div style={{ fontSize: '24px' }}>{policy.icon}</div>
+                <div style={{ textAlign: 'left', flex: 1, color: '#333' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '14px', color: policies[policy.id] ? '#008485' : '#333' }}>{policy.title}</div>
+                  <div style={{ fontSize: '12px', color: '#666' }}>{policy.desc}</div>
+                </div>
+                {policies[policy.id] && <div style={{ color: '#008485', fontSize: '12px', fontWeight: 'bold' }}>적용됨</div>}
+              </div>
+            ))}
           </div>
         </div>
 
-        <div style={{ textAlign: 'center' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', color: '#333', textAlign: 'left' }}>🛡️ 생존 기간 늘리기 (정책 시뮬레이션)</h3>
-          <div style={{ display: 'grid', gap: '12px' }}>
-            {/* Policy 1: Rent Support */}
-            <div onClick={() => togglePolicy('rent')} style={{
-              border: policies.rent ? '2px solid #009490' : '1px solid #eee',
-              backgroundColor: policies.rent ? '#E0F2F1' : 'white',
-              borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transition: 'all 0.2s'
-            }}>
-              <div style={{ fontSize: '24px' }}>🏠</div>
-              <div style={{ textAlign: 'left', flex: 1 }}>
-                <div style={{ fontWeight: 'bold', fontSize: '14px', color: policies.rent ? '#009490' : '#333' }}>청년월세지원 신청</div>
-                <div style={{ fontSize: '12px', color: '#666' }}>월 20만원 임대료 지원 받기</div>
-              </div>
-              <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: policies.rent ? '6px solid #009490' : '2px solid #ddd', boxSizing: 'border-box' }}></div>
-            </div>
-
-            {/* Policy 2: Learning Card */}
-            <div onClick={() => togglePolicy('learning')} style={{
-              border: policies.learning ? '2px solid #009490' : '1px solid #eee',
-              backgroundColor: policies.learning ? '#E0F2F1' : 'white',
-              borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transition: 'all 0.2s'
-            }}>
-              <div style={{ fontSize: '24px' }}>💳</div>
-              <div style={{ textAlign: 'left', flex: 1 }}>
-                <div style={{ fontWeight: 'bold', fontSize: '14px', color: policies.learning ? '#009490' : '#333' }}>내일배움카드 활용</div>
-                <div style={{ fontSize: '12px', color: '#666' }}>학원/강의비 월 30만원 방어</div>
-              </div>
-              <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: policies.learning ? '6px solid #009490' : '2px solid #ddd', boxSizing: 'border-box' }}></div>
+        {/* Financial Counterattack (Product Recommendations) */}
+        {ALL_PRODUCTS.filter(p => p.condition(runwayMonths)).length > 0 && (
+          <div style={{ marginBottom: '30px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', color: '#333' }}>⚔️ 자산 증식 반격 (Financial Counterattack)</h3>
+            <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '4px' }}>
+              {ALL_PRODUCTS.filter(p => p.condition(runwayMonths)).map(product => (
+                <div key={product.id} style={{
+                  minWidth: '160px', padding: '16px', borderRadius: '16px', backgroundColor: '#FFF8E1',
+                  border: '1px solid #FFECB3', display: 'flex', flexDirection: 'column', gap: '8px'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                    <span style={{ fontSize: '24px' }}>{product.icon}</span>
+                    <span style={{ fontSize: '10px', backgroundColor: '#FF6F00', color: 'white', padding: '2px 6px', borderRadius: '8px' }}>{product.tag}</span>
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#333' }}>{product.title}</div>
+                    <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>{product.desc}</div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          {/* Simulation Feedback */}
-          {monthlySavings > 0 && (
-            <div style={{ marginTop: '20px', padding: '12px', backgroundColor: '#FFF8E1', borderRadius: '12px', color: '#F57C00', fontSize: '13px', fontWeight: 'bold', animation: 'fadeIn 0.5s' }}>
-              💡 정책 활용으로 생존 기간이 <span style={{ fontSize: '16px', textDecoration: 'underline' }}>{gainedMonths}개월</span> 늘어났어요!
-            </div>
-          )}
+        )}
+
+        {/* Society Boot Camp */}
+        <div style={{ marginBottom: '30px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', color: '#333' }}>🪖 사회 적응 미션 (Society Boot Camp)</h3>
+          <div style={{ display: 'grid', gap: '8px' }}>
+            {filteredBootcamps.map(mission => (
+              <div key={mission.id} onClick={() => toggleBootcamp(mission.id)} style={{ padding: '12px', borderRadius: '12px', backgroundColor: bootcamp[mission.id] ? '#E0F2F1' : '#f5f5f5', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                <div style={{ color: bootcamp[mission.id] ? '#008485' : '#ccc' }}>{bootcamp[mission.id] ? '✅' : '⬜'}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '14px', color: '#333', textDecoration: bootcamp[mission.id] ? 'line-through' : 'none', fontWeight: bootcamp[mission.id] ? '600' : '400' }}>{mission.title}</div>
+                  <div style={{ fontSize: '12px', color: '#888' }}>{mission.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -802,7 +1043,7 @@ const FinancialMOSPage = ({ onBack, onAssetDetail }) => {
           <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><ChevronLeft size={24} color="#333" /></button>
           <div>
             <h1 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#1F2937' }}>{isSocietyMode ? '사회인 금융 로드맵' : '금융 주특기 교육'}</h1>
-            <span style={{ fontSize: '11px', color: isSocietyMode ? '#4CAF50' : '#009490', fontWeight: '600' }}>{isSocietyMode ? 'Society Financial Roadmap' : 'Financial Training Course'}</span>
+            <span style={{ fontSize: '11px', color: isSocietyMode ? '#4CAF50' : '#008485', fontWeight: '600' }}>{isSocietyMode ? 'Society Financial Roadmap' : 'Financial Training Course'}</span>
           </div>
         </div>
 
@@ -1315,17 +1556,17 @@ const TrainingItem = ({ type, title, desc, icon, status, reward }) => (
     opacity: status === 'locked' ? 0.8 : 1
   }}>
     <div style={{
-      backgroundColor: status === 'locked' ? '#e5e7eb' : '#f0fdf4',
+      backgroundColor: status === 'locked' ? '#e5e7eb' : '#E0F2F1',
       padding: '10px',
       borderRadius: '10px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center'
     }}>
-      {icon}
+      {React.cloneElement(icon, { color: status === 'locked' ? '#9CA3AF' : '#008485' })}
     </div>
     <div style={{ flex: 1 }}>
-      <div style={{ fontSize: '11px', fontWeight: '700', color: status === 'locked' ? '#9ca3af' : '#009490', marginBottom: '2px' }}>
+      <div style={{ fontSize: '11px', fontWeight: '700', color: status === 'locked' ? '#9ca3af' : '#008485', marginBottom: '2px' }}>
         [{type} 주특기]
       </div>
       <div style={{ fontSize: '14px', fontWeight: '700', color: status === 'locked' ? '#6b7280' : '#333', marginBottom: '2px' }}>
@@ -1351,7 +1592,7 @@ const TrainingItem = ({ type, title, desc, icon, status, reward }) => (
 const MissionItem = ({ title, reward, done }) => (
   <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-      <CheckCircle size={20} color={done ? "#009490" : "#ddd"} />
+      <CheckCircle size={20} color={done ? "#008485" : "#ddd"} />
       <span style={{ color: done ? '#aaa' : '#333', fontWeight: done ? '400' : '600', textDecoration: done ? 'line-through' : 'none' }}>
         {title}
       </span>
@@ -1365,7 +1606,7 @@ const MissionItem = ({ title, reward, done }) => (
 const Header = () => (
   <header className="header">
     <div className="header-left">
-      <User size={26} color="#333" />
+      <span style={{ fontFamily: 'Noto Sans KR', fontSize: '18px', fontWeight: '900', color: '#008485', letterSpacing: '-0.5px' }}>Hana Bank</span>
       <button className="btn-all-accounts">전체계좌</button>
     </div>
     <div className="header-right">
@@ -1381,8 +1622,8 @@ const Header = () => (
 const PromoBanner = () => (
   <div className="promo-banner">
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <span>👩‍💼</span>
-      <span>하나 나라사랑카드 & 통장 출시! 신규하고 경품받자!</span>
+      <span style={{ fontSize: '16px' }}>🍀</span>
+      <span style={{ fontFamily: 'Noto Sans KR' }}>하나 나라사랑카드 & 통장 출시!</span>
     </div>
     <span style={{ color: '#ccc' }}>›</span>
   </div>
@@ -1392,12 +1633,15 @@ const MainAccount = () => (
   <div className="account-card">
     <div className="account-header">
       <div>
-        <div className="account-title">장병내일준비적금</div>
+        <div className="account-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ width: '4px', height: '16px', backgroundColor: '#008485', borderRadius: '2px' }}></div>
+          장병내일준비적금
+        </div>
         <div className="account-number">
-          입출금 <span style={{ textDecoration: 'underline' }}>287-910930-78307</span>
+          입출금 <span style={{ textDecoration: 'underline', color: '#666', fontWeight: '500' }}>287-910930-78307</span>
         </div>
       </div>
-      <span className="tag-limit">우대금리</span>
+      <span className="tag-limit" style={{ color: '#008485', fontWeight: '700' }}>우대금리 적용</span>
     </div>
 
     <div className="account-balance">
@@ -1412,7 +1656,7 @@ const MainAccount = () => (
       </button>
     </div>
 
-    <div className="account-message">
+    <div className="account-message" style={{ backgroundColor: '#E0F2F1', color: '#00695C', fontWeight: '600' }}>
       ⓘ 이달의 납입 한도, 5만원 남았습니다!
     </div>
   </div>
