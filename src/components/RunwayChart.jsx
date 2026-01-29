@@ -1,53 +1,39 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot, Label, ReferenceLine } from 'recharts';
 
-const RunwayChart = ({ currentAsset, monthlyExpense, runwayMonths, baseRunwayMonths }) => {
-    // Determine which dataset to use for referencing the "End Date" logic
-    // If we have baseRunwayMonths, we want to show COMPARISON.
-    const isComparison = baseRunwayMonths && runwayMonths !== baseRunwayMonths;
+const RunwayChart = ({ currentAsset = 0, netFlow = 0, targetMonths = 6, baseNetFlow = 0 }) => {
+    // Safe Defaults
+    const safeAsset = Number(currentAsset) || 0;
+    const safeNetFlow = Number(netFlow) || 0;
+    const safeTarget = Number(targetMonths) || 6;
+    const safeBaseFlow = Number(baseNetFlow) || 0;
 
-    // Calculate Dates
-    const getTargetDate = (months) => {
-        const d = new Date();
-        d.setMonth(d.getMonth() + Math.floor(months));
-        d.setDate(d.getDate() + Math.round((months % 1) * 30));
-        return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}`;
-    };
-
-    const dateString = getTargetDate(runwayMonths);
-
-    // Data Generation
-    // We need a unified X-Axis scale. The max months should be the larger of the two runways.
-    const maxMonths = Math.max(runwayMonths, baseRunwayMonths || runwayMonths);
-
-    // We want data points for: Start(0), BaseEnd(base), NewEnd(new). 
-    // To draw smooth lines, we can just use 0 and Max.
-    const data = [
-        { name: '오늘', month: 0, currentAsset: currentAsset, baseAsset: currentAsset },
-        // If comparison exists, we add intermediate points or just let Linear interpolation handle it? 
-        // Linear is fine for burn down.
-        {
-            name: `${Math.floor(maxMonths)}개월 뒤`,
-            month: maxMonths,
-            currentAsset: runwayMonths >= maxMonths ? 0 : null, // Logic is tricky for AreaChart with different lengths
-            baseAsset: baseRunwayMonths >= maxMonths ? 0 : null
-        },
-    ];
-
-    // Better Data Approach: Generate points for every integer month to handle the "Zero" drop correctly
+    // Generate Chart Data
     const chartData = [];
-    const steps = Math.ceil(maxMonths) + 1; // +1 buffer
+    const steps = safeTarget;
+    let bankruptcyMonth = null;
+    let baseBankruptcyMonth = null;
+
+    // Calculate Bankruptcy Month (Float) directly
+    if (safeNetFlow < 0) {
+        const time = -safeAsset / safeNetFlow;
+        if (time >= 0 && time <= steps) {
+            bankruptcyMonth = time;
+        } else if (time < 0 && safeAsset <= 0) {
+            bankruptcyMonth = 0;
+        }
+    } else if (safeAsset <= 0) {
+        bankruptcyMonth = 0;
+    }
+
     for (let i = 0; i <= steps; i++) {
-        // Calculate remaining asset for "Current Strategy"
-        let cur = currentAsset - (currentAsset / runwayMonths) * i;
+        // Calculate Projected Asset
+        let cur = safeAsset + (safeNetFlow * i);
+        let base = safeAsset + (safeBaseFlow * i);
+
+        // Clamping for visualization
         if (cur < 0) cur = 0;
-
-        // Calculate remaining asset for "Base Strategy"
-        let base = baseRunwayMonths ? (currentAsset - (currentAsset / baseRunwayMonths) * i) : cur;
         if (base < 0) base = 0;
-
-        // Visual optimization: Don't show long flat lines at 0
-        if (i > runwayMonths + 1 && i > baseRunwayMonths + 1) break;
 
         chartData.push({
             name: i === 0 ? '오늘' : `${i}개월`,
@@ -57,30 +43,39 @@ const RunwayChart = ({ currentAsset, monthlyExpense, runwayMonths, baseRunwayMon
         });
     }
 
-    // Format Y-Axis ticks (e.g. 1250000 -> 125)
+    // Determine Status
+    // Safe if NetFlow >= 0 OR Assets never drop below 0 in target period
+    const isSafe = safeNetFlow >= 0 || (safeAsset + (safeNetFlow * safeTarget)) > 0;
+    const finalAsset = Math.max(0, safeAsset + (safeNetFlow * safeTarget));
+
+    // Comparison Logic
+    const isComparison = safeBaseFlow !== safeNetFlow;
+
+    // Format Y-Axis
     const formatYAxis = (tickItem) => {
         return `${(tickItem / 10000).toLocaleString()}만`;
     };
 
     return (
-        <div style={{ width: '100%', height: 300, backgroundColor: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', marginBottom: '20px' }}>
+        <div style={{ width: '100%', height: 320, backgroundColor: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', marginBottom: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
                 <div>
                     <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#333', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        📉 자산 생존 곡선
-                        <span style={{ fontSize: '10px', backgroundColor: '#e6f4ff', padding: '2px 6px', borderRadius: '4px', color: '#008485' }}>Live</span>
+                        📊 목표 기간 생존 시뮬레이션
+                        <span style={{ fontSize: '10px', backgroundColor: isSafe ? '#E6F4FF' : '#FFF0F0', padding: '2px 6px', borderRadius: '4px', color: isSafe ? '#008485' : '#E60028' }}>
+                            {safeTarget}개월
+                        </span>
                     </h3>
                     <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0 0' }}>
-                        {isComparison ? '지출 방어 효과가 그래프에 반영됩니다.' : '현재 소비 습관 예측입니다.'}
+                        매달 {safeNetFlow >= 0 ? '+' : ''}{safeNetFlow.toLocaleString()}원 {safeNetFlow >= 0 ? '저축' : '감소'} 예상
                     </p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '11px', color: '#999' }}>파산 예정일</div>
-                    <div style={{ fontSize: '14px', color: '#E60028', fontWeight: 'bold' }}>{dateString}</div>
-                    {isComparison && (
-                        <div style={{ fontSize: '11px', color: '#008485', fontWeight: 'bold' }}>
-                            (+{(runwayMonths - baseRunwayMonths).toFixed(1)}개월 연장됨)
-                        </div>
+                    <div style={{ fontSize: '11px', color: '#999' }}>예상 결과</div>
+                    {isSafe ? (
+                        <div style={{ fontSize: '14px', color: '#008485', fontWeight: 'bold' }}>🎉 생존 성공!</div>
+                    ) : (
+                        <div style={{ fontSize: '14px', color: '#E60028', fontWeight: 'bold' }}>🚨 {Number(bankruptcyMonth).toFixed(1)}개월 후 파산</div>
                     )}
                 </div>
             </div>
@@ -88,22 +83,29 @@ const RunwayChart = ({ currentAsset, monthlyExpense, runwayMonths, baseRunwayMon
             <ResponsiveContainer width="100%" height={180}>
                 <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
-                        <linearGradient id="colorCurrent" x1="0" y1="0" x2="0" y2="1">
+                        <linearGradient id="colorSafe" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#008485" stopOpacity={0.6} />
                             <stop offset="95%" stopColor="#008485" stopOpacity={0.1} />
                         </linearGradient>
+                        <linearGradient id="colorDanger" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#E60028" stopOpacity={0.6} />
+                            <stop offset="95%" stopColor="#E60028" stopOpacity={0.1} />
+                        </linearGradient>
                         <linearGradient id="colorBase" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#888" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#888" stopOpacity={0.1} />
+                            <stop offset="5%" stopColor="#999" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#999" stopOpacity={0.1} />
                         </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                     <XAxis
-                        dataKey="name"
+                        dataKey="month"
+                        type="number"
+                        domain={[0, safeTarget]}
                         tick={{ fontSize: 10, fill: '#aaa' }}
                         tickLine={false}
                         axisLine={false}
                         dy={8}
+                        tickFormatter={(val) => val === 0 ? '오늘' : `${val}개월`}
                         interval="preserveStartEnd"
                     />
                     <YAxis
@@ -113,58 +115,60 @@ const RunwayChart = ({ currentAsset, monthlyExpense, runwayMonths, baseRunwayMon
                         tickFormatter={formatYAxis}
                     />
                     <Tooltip
+                        labelFormatter={(val) => val === 0 ? '오늘' : `${val}개월`}
                         formatter={(value, name) => [
                             `${value.toLocaleString()}원`,
-                            name === 'currentAsset' ? '개선된 자산' : '기존 자산'
+                            name === 'currentAsset' ? '예상 자산' : '기존 자산'
                         ]}
                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 20px rgba(0,0,0,0.1)', fontSize: '12px' }}
                     />
 
-                    {/* Base Strategy (Before) - Only show if comparison exists */}
+                    {/* Base Line (Comparison) */}
                     {isComparison && (
                         <Area
                             type="monotone"
                             dataKey="baseAsset"
-                            stroke="#888"
+                            stroke="#999"
                             strokeDasharray="5 5"
                             strokeWidth={2}
-                            fillOpacity={1}
                             fill="url(#colorBase)"
                             name="baseAsset"
                         />
                     )}
 
-                    {/* Current Strategy (After) */}
+                    {/* Main Line */}
                     <Area
                         type="monotone"
                         dataKey="currentAsset"
-                        stroke="#008485"
+                        stroke={isSafe ? "#008485" : "#E60028"}
                         strokeWidth={3}
-                        fillOpacity={isComparison ? 0.4 : 1}
-                        fill="url(#colorCurrent)"
+                        fill={isSafe ? "url(#colorSafe)" : "url(#colorDanger)"}
                         name="currentAsset"
                         animationDuration={1000}
                     />
 
-                    {/* Crash Markers */}
-                    {isComparison && (
-                        <ReferenceDot x={Math.floor(baseRunwayMonths)} y={0} r={4} fill="#888" stroke="white" strokeWidth={2}>
-                            <Label value="" />
+                    {/* Bankruptcy Marker (Safe Float Placement) */}
+                    {!isSafe && bankruptcyMonth !== null && (
+                        <ReferenceDot x={bankruptcyMonth} y={0} r={6} fill="#E60028" stroke="white" strokeWidth={2} isFront={true}>
+                            <Label value="💥" position="top" offset={10} fontSize={16} />
                         </ReferenceDot>
                     )}
 
-                    <ReferenceDot x={Math.floor(runwayMonths)} y={0} r={6} fill="#E60028" stroke="white" strokeWidth={2} isFront={true}>
-                        <Label value="NEW" position="top" offset={10} fontSize={10} fill="#E60028" fontWeight="bold" />
-                    </ReferenceDot>
+                    {/* Success Marker */}
+                    {isSafe && (
+                        <ReferenceDot x={safeTarget} y={finalAsset} r={6} fill="#008485" stroke="white" strokeWidth={2} isFront={true}>
+                            <Label value="Goal!" position="top" offset={10} fontSize={12} fill="#008485" fontWeight="bold" />
+                        </ReferenceDot>
+                    )}
                 </AreaChart>
             </ResponsiveContainer>
 
-            <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #f5f5f5', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <span style={{ fontSize: '14px' }}>💡</span>
+            <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #f5f5f5', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span style={{ fontSize: '14px' }}>{isSafe ? '🌈' : '💡'}</span>
                 <span style={{ fontSize: '11px', color: '#666' }}>
-                    {isComparison
-                        ? <span>방어구 착용으로 생존 기간이 <b style={{ color: '#008485' }}>늘어났습니다!</b> 그래프 격차를 확인하세요.</span>
-                        : <span>아래 <b>지출 방어 솔루션</b>을 선택하면 그래프가 실시간으로 변합니다.</span>
+                    {isSafe
+                        ? <span>목표 기간 종료 시 <b style={{ color: '#008485' }}>{finalAsset.toLocaleString()}원</b>이 남습니다! 훌륭해요.</span>
+                        : <span>이대로라면 <b style={{ color: '#E60028' }}>{Math.abs(Math.floor(finalAsset - (netFlow * (targetMonths - bankruptcyMonth))))}원</b>이 부족합니다. 지출을 줄이세요!</span>
                     }
                 </span>
             </div>

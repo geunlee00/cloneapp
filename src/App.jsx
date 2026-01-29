@@ -27,6 +27,9 @@ import {
   Sparkles,
   X
 } from 'lucide-react';
+import RunwaySetupModal from './components/RunwaySetupModal';
+import BannerCarousel from './components/BannerCarousel';
+import ProductSimulationModal from './components/ProductSimulationModal';
 
 import militaryPxImg from './assets/images/military_px.png';
 import militaryAdminImg from './assets/images/military_admin.png';
@@ -40,16 +43,8 @@ import fantasyWorldMapImg from './assets/images/fantasy_world_map.png';
 import societyWorldMapImg from './assets/images/society_world_map.png';
 
 import RunwayChart from './components/RunwayChart';
-import ProductSimulationModal from './components/ProductSimulationModal';
 
 function App() {
-  // ... existing code ...
-
-  // ... inside MilitaryLoungePage ...
-
-  // ... existing code ...
-
-  // ... inside MilitaryLoungePage ...
 
   const [currentView, setCurrentView] = useState('home');
 
@@ -701,6 +696,9 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
   const [showGraph, setShowGraph] = useState(false);
   const [userContext, setUserContext] = useState(null); // { housing, job, location }
 
+  // Runway 2.0 Config
+  const [runwayConfig, setRunwayConfig] = useState(null); // { targetMonths, monthlyIncome, monthlyExpense }
+
   // Realism: Simulation Modal State
   const [simulationModal, setSimulationModal] = useState({
     isOpen: false,
@@ -728,8 +726,8 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
       condition: (ctx) => !ctx || (ctx.housing === 'wallse' && ctx.job === 'employed')
     },
     {
-      id: 'learning', title: '내일배움카드', desc: '학원비 방어 (월 30만원)',
-      saveAmount: 300000, icon: '💳',
+      id: 'learning', title: '내일배움카드', desc: '학원비 방어 (월 15만원)',
+      saveAmount: 150000, icon: '💳',
       condition: (ctx) => !ctx || (ctx.job === 'unemployed' || ctx.job === 'student')
     },
     {
@@ -814,11 +812,12 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
     phone: false
   });
 
-  // Logic Reuse
-  const currentAsset = 1250000;
-  const monthlySpendVal = userProfile?.monthlySpend ? parseInt(String(userProfile.monthlySpend).replace(/,/g, ''), 10) : 0;
-  // Default spend or user input
-  const baseSpend = monthlySpendVal > 0 ? monthlySpendVal : 800000; // Persona Default: 800k
+  // Current & Config Values
+  const currentAsset = runwayConfig?.currentAsset || 1250000;
+
+  // Use Config Expense if available, else Persona Default
+  const baseExpense = runwayConfig?.monthlyExpense || (userProfile?.monthlySpend ? parseInt(String(userProfile.monthlySpend).replace(/,/g, ''), 10) : 800000);
+  const monthlyIncome = runwayConfig?.monthlyIncome || 0;
 
   // Filter Policies & Bootcamps
   const filteredPolicies = ALL_POLICIES.filter(p => !userContext || p.condition(userContext));
@@ -835,39 +834,57 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
     if (bootcamp[b.id]) monthlySavings += b.saveAmount;
   });
 
-  // Effective Spend (Minimum 50k to prevent div by zero/infinite)
-  const effectiveSpend = Math.max(baseSpend - monthlySavings, 50000);
+  // Net Flow Calculation (Runway 2.0)
+  // Effective Expense = Base Expense - Savings
+  const effectiveExpense = Math.max(baseExpense - monthlySavings, 0);
+  const netFlow = monthlyIncome - effectiveExpense;
 
-  // Runway Calculation
-  const runwayMonths = currentAsset / effectiveSpend;
+  // Time to Failure (Runway 1.0 Logic for backward compatibility with chart)
+  // If NetFlow >= 0, Runway is Infinite (Safe).
+  // If NetFlow < 0, Runway = CurrentAsset / abs(NetFlow)
+  const burnRate = netFlow < 0 ? Math.abs(netFlow) : 0;
+  const timeToFailure = burnRate > 0 ? currentAsset / burnRate : 999; // 999 for infinite
+
+  // Legacy Variables Mapped for Views
+  const runwayMonths = timeToFailure;
+  const effectiveSpend = effectiveExpense; // For chart display
   const runwayMonthsInt = Math.floor(runwayMonths);
-  const runwayDays = Math.floor((runwayMonths - runwayMonthsInt) * 30);
+  const runwayDays = burnRate > 0 ? Math.floor((runwayMonths - runwayMonthsInt) * 30) : 0;
 
-  // Base Runway (for comparison)
-  const baseRunwayMonths = currentAsset / baseSpend;
-  const baseRunwayMonthsInt = Math.floor(baseRunwayMonths);
+  // Base Runway (Comparison)
+  // Base Net Flow = Income - Base Expense (No Savings)
+  const baseNetFlow = monthlyIncome - baseExpense;
+  const baseBurnRate = baseNetFlow < 0 ? Math.abs(baseNetFlow) : 0;
+  const baseRunwayMonths = baseBurnRate > 0 ? currentAsset / baseBurnRate : 999;
 
   // Extension Gain
-  const gainedMonths = runwayMonthsInt - baseRunwayMonthsInt;
+  const gainedMonths = (runwayMonths > 900 ? 999 : runwayMonths) - (baseRunwayMonths > 900 ? 999 : baseRunwayMonths);
+
+  // Ratio-based Thresholds (Refined Logic)
+  const targetMonths = runwayConfig?.targetMonths || 6;
+  const isInfiniteRunway = netFlow >= 0;
+  const survivalRatio = isInfiniteRunway ? 1.5 : (runwayMonths / targetMonths);
 
   // Status & Diagnosis
   let status = "안전";
   let statusColor = "#4CAF50";
-  let diagnosisMsg = "아직은 여유가 있습니다.";
-  let bgTheme = "office"; // office, gosiwon
+  let diagnosisMsg = "목표 기간까지 충분히 버틸 수 있습니다!";
+  let bgTheme = "safe";
 
-  if (runwayMonths < 3) {
+  // Danger: Less than 50% of target
+  if (!isInfiniteRunway && survivalRatio < 0.5) {
     status = "🚨 파산 위험";
     statusColor = "#ff4d4f";
-    diagnosisMsg = `현재 고정비 유지 시, D-${Math.floor(runwayMonths * 30)}일 뒤 파산합니다.`;
-    // bgTheme removed
-  } else if (runwayMonths < 6) {
+    diagnosisMsg = `목표 기간의 절반도 버티기 힘들어요 (${Math.floor(runwayMonths * 30)}일 남음)`;
+
+    // Warning: Less than 100% of target (Fail to meet goal, but > 50%)
+  } else if (!isInfiniteRunway && survivalRatio < 1.0) {
     status = "⚠️ 주의";
     statusColor = "#faad14";
-    diagnosisMsg = "고정비를 줄이지 않으면 위험해요.";
+    diagnosisMsg = `목표까지 ${Math.ceil(targetMonths - runwayMonths)}개월 더 버텨야 합니다.`;
   }
 
-  const gaugePercent = Math.min((runwayMonths / 6) * 100, 100);
+  const gaugePercent = Math.min(survivalRatio * 100, 100);
 
   const togglePolicy = (key) => {
     setPolicies(prev => ({ ...prev, [key]: !prev[key] }));
@@ -901,10 +918,20 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
         />
       )}
 
+      {/* Runway Setup Modal (Runway 2.0) */}
+      {!runwayConfig && (
+        <RunwaySetupModal
+          onClose={() => { }} // Block close?
+          onComplete={(data) => setRunwayConfig(data)}
+          initialExpense={baseExpense}
+          initialAsset={userProfile?.goalAmount ? Math.floor(userProfile.goalAmount / 10) : 0} // Suggest initial asset derived from profile if possible, or 0
+        />
+      )}
+
       <div className="header sticky top-0 z-10" style={{ backgroundColor: '#fff', display: 'flex', alignItems: 'center', padding: '16px', borderBottom: '1px solid #eee', color: '#333' }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '10px' }}><ChevronLeft size={24} color="#333" /></button>
         <h1 style={{ fontSize: '18px', fontWeight: '700', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-          하나 런웨이 {gainedMonths > 0 && <span style={{ fontSize: '12px', backgroundColor: '#e6f4ff', color: '#008485', padding: '2px 8px', borderRadius: '12px' }}>+{gainedMonths}개월 연장!</span>}
+          하나 런웨이 {gainedMonths > 0 && <span style={{ fontSize: '12px', backgroundColor: '#e6f4ff', color: '#008485', padding: '2px 8px', borderRadius: '12px' }}>+{gainedMonths.toFixed(1)}개월 연장!</span>}
         </h1>
         {/* Toggle Button in Header */}
         <button onClick={() => setShowGraph(!showGraph)} style={{ marginLeft: 'auto', border: '1px solid #ddd', padding: '6px 12px', borderRadius: '20px', backgroundColor: 'white', color: '#666', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
@@ -916,11 +943,11 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
         flex: 1,
         padding: '24px',
         overflowY: 'auto',
-        background: runwayMonths < 3
-          ? 'linear-gradient(180deg, #FFF1F3 0%, #FFF 100%)' // Danger (Very Light Red)
-          : runwayMonths < 6
-            ? 'linear-gradient(180deg, #FFFFF4 0%, #FFF 100%)' // Warning (Very Light Yellow)
-            : 'transparent', // Safe
+        background: (!isInfiniteRunway && survivalRatio < 0.5)
+          ? 'linear-gradient(180deg, #FFF1F3 0%, #FFF 100%)' // Danger (< 50%)
+          : (!isInfiniteRunway && survivalRatio < 1.0)
+            ? 'linear-gradient(180deg, #FFFFF4 0%, #FFF 100%)' // Warning (< 100%)
+            : 'transparent', // Safe (>= 100%)
         transition: 'background 0.5s ease'
       }}>
 
@@ -928,23 +955,26 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
         {showGraph ? (
           <div style={{ animation: 'fadeIn 0.3s' }}>
             <RunwayChart
-              currentAsset={currentAsset}
-              monthlyExpense={effectiveSpend}
-              runwayMonths={runwayMonths}
-              baseRunwayMonths={baseRunwayMonths}
+              key={`${runwayConfig?.targetMonths}-${currentAsset}-${netFlow}`} // Force remount on data change to prevent Recharts animation crash
+              currentAsset={Number(currentAsset) || 0}
+              netFlow={Number(netFlow) || 0}
+              targetMonths={Number(runwayConfig?.targetMonths) || 6}
+              baseNetFlow={Number(baseNetFlow) || 0}
             />
           </div>
         ) : (
           <div style={{ textAlign: 'center', marginBottom: '30px', marginTop: '10px', animation: 'fadeIn 0.3s' }}>
             <div style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>현재 자산으로 버틸 수 있는 기간</div>
             <div style={{ fontSize: '36px', fontWeight: '800', color: statusColor, transition: 'all 0.3s' }}>
-              {runwayMonthsInt}개월 {runwayDays}일
+              {runwayMonths > 100
+                ? (netFlow >= 0 ? "자산 증가 중 🚀" : `${runwayMonthsInt}개월 (여유)`)
+                : `${runwayMonthsInt}개월 ${runwayDays}일`}
             </div>
 
             {/* Gamification Image (Restored) */}
             <div style={{ margin: '20px auto', width: '250px', height: '250px', borderRadius: '16px', overflow: 'hidden', border: `4px solid ${statusColor}`, transition: 'all 0.5s', boxShadow: '0 8px 20px rgba(0,0,0,0.1)' }}>
               <img
-                src={runwayMonths < 3 ? runwayDangerImg : (runwayMonths < 6 ? runwayWarningImg : runwaySafeImg)}
+                src={(!isInfiniteRunway && survivalRatio < 0.5) ? runwayDangerImg : ((!isInfiniteRunway && survivalRatio < 1.0) ? runwayWarningImg : runwaySafeImg)}
                 alt="Character State"
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
@@ -974,7 +1004,7 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
           <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '12px', marginBottom: '12px' }}>
             <span style={{ fontSize: '14px', color: '#555' }}>예상 월 지출 (Burn Rate)</span>
             <span style={{ fontSize: '16px', fontWeight: 'bold', color: monthlySavings > 0 ? '#009490' : 'inherit' }}>
-              {effectiveSpend.toLocaleString()}원 {monthlySavings > 0 && <span style={{ fontSize: '12px', textDecoration: 'line-through', color: '#999' }}>({baseSpend.toLocaleString()})</span>}
+              {effectiveSpend.toLocaleString()}원 {monthlySavings > 0 && <span style={{ fontSize: '12px', textDecoration: 'line-through', color: '#999' }}>({baseExpense.toLocaleString()})</span>}
             </span>
           </div>
         </div>
@@ -1035,6 +1065,11 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Promotional Banner */}
+            <div style={{ marginTop: '20px' }}>
+              <BannerCarousel />
             </div>
           </div>
         )}
