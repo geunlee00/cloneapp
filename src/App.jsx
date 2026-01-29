@@ -912,7 +912,17 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
           {showGraph ? '캐릭터 보기' : '그래프 보기'}
         </button>
       </div>
-      <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+      <div style={{
+        flex: 1,
+        padding: '24px',
+        overflowY: 'auto',
+        background: runwayMonths < 3
+          ? 'linear-gradient(180deg, #FFF 0%, #FFF5F5 100%)' // Danger (Red)
+          : runwayMonths < 6
+            ? 'linear-gradient(180deg, #FFF 0%, #FFFBE6 100%)' // Warning (Yellow)
+            : 'transparent', // Safe
+        transition: 'background 0.5s ease'
+      }}>
 
         {/* Toggle View: Character vs Chart */}
         {showGraph ? (
