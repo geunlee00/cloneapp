@@ -917,9 +917,9 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
         padding: '24px',
         overflowY: 'auto',
         background: runwayMonths < 3
-          ? 'linear-gradient(180deg, #FFEBEE 0%, #FFF 100%)' // Danger (Red) - Top Darker
+          ? 'linear-gradient(180deg, #FFF1F3 0%, #FFF 100%)' // Danger (Very Light Red)
           : runwayMonths < 6
-            ? 'linear-gradient(180deg, #FFFDE7 0%, #FFF 100%)' // Warning (Yellow) - Top Darker
+            ? 'linear-gradient(180deg, #FFFFF4 0%, #FFF 100%)' // Warning (Very Light Yellow)
             : 'transparent', // Safe
         transition: 'background 0.5s ease'
       }}>
