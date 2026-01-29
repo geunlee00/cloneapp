@@ -123,10 +123,7 @@ const ProductSimulationModal = ({ product, onClose, onComplete }) => {
                             성공적인 자산 증식의 첫걸음,<br />축하드립니다!
                         </p>
 
-                        <div style={{ backgroundColor: '#FFF8E1', padding: '16px', borderRadius: '12px', marginBottom: '24px', textAlign: 'left', border: '1px solid #FFECB3' }}>
-                            <div style={{ fontSize: '12px', color: '#F57C00', fontWeight: 'bold', marginBottom: '4px' }}>🎁 보너스 리워드</div>
-                            <div style={{ fontSize: '14px', fontWeight: 'bold' }}>건빵 +300개 지급 완료</div>
-                        </div>
+
 
                         <button onClick={() => onComplete(product)} style={{ width: '100%', padding: '16px', borderRadius: '16px', backgroundColor: '#008485', color: 'white', border: 'none', fontSize: '16px', fontWeight: 'bold' }}>
                             확인
