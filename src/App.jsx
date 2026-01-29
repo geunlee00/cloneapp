@@ -39,6 +39,9 @@ import societyImg from './assets/images/society.png';
 import fantasyWorldMapImg from './assets/images/fantasy_world_map.png';
 import societyWorldMapImg from './assets/images/society_world_map.png';
 
+import RunwayChart from './components/RunwayChart';
+import ProductSimulationModal from './components/ProductSimulationModal';
+
 function App() {
   // ... existing code ...
 
@@ -695,7 +698,14 @@ const StrategyMeetingModal = ({ onClose, onComplete }) => {
 
 const SurvivalRunwayPage = ({ onBack, userProfile }) => {
   const [showMeeting, setShowMeeting] = useState(false);
+  const [showGraph, setShowGraph] = useState(false);
   const [userContext, setUserContext] = useState(null); // { housing, job, location }
+
+  // Realism: Simulation Modal State
+  const [simulationModal, setSimulationModal] = useState({
+    isOpen: false,
+    product: null
+  });
 
   // Initial Policies State (All False initially)
   const [policies, setPolicies] = useState({
@@ -873,37 +883,73 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
     setPolicies({});
   };
 
+  const handleSimulationComplete = (product) => {
+    setSimulationModal({ isOpen: false, product: null });
+    // In a real app, we would save this to user portfolio
+  };
+
   return (
     <div className="app-container" style={{ backgroundColor: '#fff', display: 'flex', flexDirection: 'column' }}>
       {showMeeting && <StrategyMeetingModal onClose={() => setShowMeeting(false)} onComplete={handleMeetingComplete} />}
+
+      {/* Realism: Simulation Modal */}
+      {simulationModal.isOpen && (
+        <ProductSimulationModal
+          product={simulationModal.product}
+          onClose={() => setSimulationModal({ isOpen: false, product: null })}
+          onComplete={handleSimulationComplete}
+        />
+      )}
+
       <div className="header sticky top-0 z-10" style={{ backgroundColor: '#fff', display: 'flex', alignItems: 'center', padding: '16px', borderBottom: '1px solid #eee', color: '#333' }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '10px' }}><ChevronLeft size={24} color="#333" /></button>
         <h1 style={{ fontSize: '18px', fontWeight: '700', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
           하나 런웨이 {gainedMonths > 0 && <span style={{ fontSize: '12px', backgroundColor: '#e6f4ff', color: '#008485', padding: '2px 8px', borderRadius: '12px' }}>+{gainedMonths}개월 연장!</span>}
         </h1>
+        {/* Toggle Button in Header */}
+        <button onClick={() => setShowGraph(!showGraph)} style={{ marginLeft: 'auto', border: '1px solid #ddd', padding: '6px 12px', borderRadius: '20px', backgroundColor: 'white', color: '#666', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+          {showGraph ? <User size={14} /> : <TrendingUp size={14} />}
+          {showGraph ? '캐릭터 보기' : '그래프 보기'}
+        </button>
       </div>
       <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '30px', marginTop: '10px' }}>
-          <div style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>현재 자산으로 버틸 수 있는 기간</div>
-          <div style={{ fontSize: '36px', fontWeight: '800', color: statusColor, transition: 'all 0.3s' }}>
-            {runwayMonthsInt}개월 {runwayDays}일
-          </div>
 
-          {/* Gamification Image */}
-          <div style={{ margin: '20px auto', width: '250px', height: '250px', borderRadius: '16px', overflow: 'hidden', border: `4px solid ${statusColor}`, transition: 'all 0.5s', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-            <img
-              src={runwayMonths < 3 ? runwayDangerImg : (runwayMonths < 6 ? runwayWarningImg : runwaySafeImg)}
-              alt="Character State"
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        {/* Toggle View: Character vs Chart */}
+        {showGraph ? (
+          <div style={{ animation: 'fadeIn 0.3s' }}>
+            <RunwayChart
+              currentAsset={currentAsset}
+              monthlyExpense={effectiveSpend}
+              runwayMonths={runwayMonths}
+              baseRunwayMonths={baseRunwayMonths}
             />
           </div>
+        ) : (
+          <div style={{ textAlign: 'center', marginBottom: '30px', marginTop: '10px', animation: 'fadeIn 0.3s' }}>
+            <div style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>현재 자산으로 버틸 수 있는 기간</div>
+            <div style={{ fontSize: '36px', fontWeight: '800', color: statusColor, transition: 'all 0.3s' }}>
+              {runwayMonthsInt}개월 {runwayDays}일
+            </div>
 
-          <div style={{ marginTop: '12px', color: statusColor, fontWeight: 'bold', fontSize: '15px' }}>
-            "{diagnosisMsg}"
+            {/* Gamification Image (Restored) */}
+            <div style={{ margin: '20px auto', width: '250px', height: '250px', borderRadius: '16px', overflow: 'hidden', border: `4px solid ${statusColor}`, transition: 'all 0.5s', boxShadow: '0 8px 20px rgba(0,0,0,0.1)' }}>
+              <img
+                src={runwayMonths < 3 ? runwayDangerImg : (runwayMonths < 6 ? runwayWarningImg : runwaySafeImg)}
+                alt="Character State"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+
+            <div style={{ marginTop: '12px', color: statusColor, fontWeight: 'bold', fontSize: '15px' }}>
+              "{diagnosisMsg}"
+            </div>
           </div>
+        )}
 
+        {/* Keeping only the Savings Tag if applicable */}
+        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
           {monthlySavings > 0 && (
-            <div style={{ marginTop: '12px', fontSize: '14px', fontWeight: 'bold', backgroundColor: '#FFF3E0', color: '#F57C00', padding: '6px 16px', borderRadius: '20px', display: 'inline-block' }}>
+            <div style={{ marginTop: '12px', fontSize: '14px', fontWeight: 'bold', backgroundColor: '#E0F2F1', color: '#008485', padding: '6px 16px', borderRadius: '20px', display: 'inline-block' }}>
               월 {monthlySavings.toLocaleString()}원 절약 중
             </div>
           )}
@@ -964,9 +1010,10 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
             <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', color: '#333' }}>⚔️ 자산 증식 반격 (Financial Counterattack)</h3>
             <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '4px' }}>
               {ALL_PRODUCTS.filter(p => p.condition(runwayMonths)).map(product => (
-                <div key={product.id} style={{
+                <div key={product.id} onClick={() => setSimulationModal({ isOpen: true, product })} style={{
                   minWidth: '160px', padding: '16px', borderRadius: '16px', backgroundColor: '#FFF8E1',
-                  border: '1px solid #FFECB3', display: 'flex', flexDirection: 'column', gap: '8px'
+                  border: '1px solid #FFECB3', display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer',
+                  transition: 'transform 0.2s'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                     <span style={{ fontSize: '24px' }}>{product.icon}</span>
