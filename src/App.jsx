@@ -713,6 +713,24 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
     deposit: false // Guaranteed Return
   });
 
+  // MyData Link State
+  const [isMyDataLinked, setIsMyDataLinked] = useState(false);
+
+  const handleLinkMyData = () => {
+    // Simulate fetching precise data
+    if (!runwayConfig) return;
+
+    // Example: Add random 'precise' amount to make it look real
+    const preciseAsset = runwayConfig.currentAsset + 34560;
+
+    setRunwayConfig(prev => ({
+      ...prev,
+      currentAsset: preciseAsset
+    }));
+    setIsMyDataLinked(true);
+    alert("마이데이터 연동 완료! 자산 정보를 정밀하게 불러왔습니다. (정확도 2배 상승 🎯)");
+  };
+
   // Policy Database
   const ALL_POLICIES = [
     {
@@ -1007,6 +1025,39 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
               {effectiveSpend.toLocaleString()}원 {monthlySavings > 0 && <span style={{ fontSize: '12px', textDecoration: 'line-through', color: '#999' }}>({baseExpense.toLocaleString()})</span>}
             </span>
           </div>
+
+          {/* MyData Link Action */}
+          {!isMyDataLinked ? (
+            <button
+              onClick={handleLinkMyData}
+              style={{
+                width: '100%',
+                padding: '12px',
+                backgroundColor: '#E8F5E9',
+                border: '1px dashed #4CAF50',
+                borderRadius: '8px',
+                color: '#2E7D32',
+                fontSize: '13px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+              }}
+            >
+              🔗 마이데이터 연동시 정확도 2배! (Click)
+            </button>
+          ) : (
+            <div style={{
+              width: '100%',
+              padding: '10px',
+              backgroundColor: '#F5F5F5',
+              borderRadius: '8px',
+              color: '#666',
+              fontSize: '12px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+            }}>
+              ✅ 마이데이터 연동 완료 (정밀 분석 중)
+            </div>
+          )}
         </div>
 
         {/* Tactical Guide */}
