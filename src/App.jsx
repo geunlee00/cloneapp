@@ -30,6 +30,7 @@ import {
 import RunwaySetupModal from './components/RunwaySetupModal';
 import BannerCarousel from './components/BannerCarousel';
 import ProductSimulationModal from './components/ProductSimulationModal';
+import MyDataConsentModal from './components/MyDataConsentModal';
 
 import militaryPxImg from './assets/images/military_px.png';
 import militaryAdminImg from './assets/images/military_admin.png';
@@ -715,20 +716,23 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
 
   // MyData Link State
   const [isMyDataLinked, setIsMyDataLinked] = useState(false);
+  const [showConsentModal, setShowConsentModal] = useState(false);
 
   const handleLinkMyData = () => {
-    // Simulate fetching precise data
     if (!runwayConfig) return;
+    setShowConsentModal(true);
+  };
 
-    // Example: Add random 'precise' amount to make it look real
-    const preciseAsset = runwayConfig.currentAsset + 34560;
+  const confirmLinkMyData = () => {
+    // Fixed simulation value as per user request
+    const preciseAsset = 6000000;
 
     setRunwayConfig(prev => ({
       ...prev,
       currentAsset: preciseAsset
     }));
     setIsMyDataLinked(true);
-    alert("마이데이터 연동 완료! 자산 정보를 정밀하게 불러왔습니다. (정확도 2배 상승 🎯)");
+    setShowConsentModal(false);
   };
 
   // Policy Database
@@ -1141,7 +1145,18 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
           </div>
         </div>
       </div>
-    </div>
+
+
+      {/* Consent Modal */}
+      {
+        showConsentModal && (
+          <MyDataConsentModal
+            onClose={() => setShowConsentModal(false)}
+            onConfirm={confirmLinkMyData}
+          />
+        )
+      }
+    </div >
   );
 };
 
