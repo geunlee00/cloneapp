@@ -1093,7 +1093,17 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
                   <div style={{ fontWeight: 'bold', fontSize: '14px', color: policies[policy.id] ? '#008485' : '#333' }}>{policy.title}</div>
                   <div style={{ fontSize: '12px', color: '#666' }}>{policy.desc}</div>
                 </div>
-                {policies[policy.id] && <div style={{ color: '#008485', fontSize: '12px', fontWeight: 'bold' }}>적용됨</div>}
+                {/* Toggle Switch */}
+                <div style={{
+                  width: '44px', height: '24px', backgroundColor: policies[policy.id] ? '#008485' : '#e0e0e0',
+                  borderRadius: '12px', position: 'relative', transition: 'background-color 0.2s'
+                }}>
+                  <div style={{
+                    width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%',
+                    position: 'absolute', top: '2px', left: policies[policy.id] ? '22px' : '2px',
+                    transition: 'left 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }} />
+                </div>
               </div>
             ))}
           </div>
