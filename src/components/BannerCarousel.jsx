@@ -40,7 +40,7 @@ const BannerCarousel = () => {
     }, []);
 
     return (
-        <div style={{ position: 'relative', width: '100%', borderRadius: '12px', overflow: 'hidden', height: '100px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        <div style={{ position: 'relative', width: '100%', borderRadius: '16px', overflow: 'hidden', height: '140px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
             {/* Slides */}
             <div style={{
                 display: 'flex',
@@ -54,28 +54,28 @@ const BannerCarousel = () => {
                         width: `${100 / BANNERS.length}%`,
                         height: '100%',
                         background: banner.color,
-                        padding: '0 20px',
+                        padding: '0 24px',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         boxSizing: 'border-box'
                     }}>
-                        <div style={{ color: 'white', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                                <span style={{ fontSize: '9px', backgroundColor: 'rgba(255,255,255,0.15)', padding: '1px 6px', borderRadius: '4px', backdropFilter: 'blur(4px)' }}>
+                        <div style={{ color: 'white', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                                <span style={{ fontSize: '11px', backgroundColor: 'rgba(255,255,255,0.15)', padding: '2px 8px', borderRadius: '4px', backdropFilter: 'blur(4px)' }}>
                                     {banner.tag}
                                 </span>
                             </div>
-                            <h3 style={{ fontSize: '15px', fontWeight: '700', margin: 0 }}>{banner.title}</h3>
-                            <p style={{ fontSize: '11px', opacity: 0.8, margin: 0 }}>{banner.subtitle}</p>
+                            <h3 style={{ fontSize: '20px', fontWeight: '800', margin: 0, lineHeight: '1.3' }}>{banner.title}</h3>
+                            <p style={{ fontSize: '13px', opacity: 0.9, margin: 0 }}>{banner.subtitle}</p>
                         </div>
                         <div style={{
                             backgroundColor: 'rgba(255,255,255,0.1)',
-                            width: '48px', height: '48px', borderRadius: '50%',
+                            width: '64px', height: '64px', borderRadius: '50%',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            border: '1px solid rgba(255,255,255,0.1)'
+                            border: '1px solid rgba(255,255,255,0.15)'
                         }}>
-                            {banner.icon}
+                            {React.cloneElement(banner.icon, { size: 32 })}
                         </div>
                     </div>
                 ))}
@@ -83,17 +83,17 @@ const BannerCarousel = () => {
 
             {/* Basic Dots */}
             <div style={{
-                position: 'absolute', bottom: '10px', left: '20px',
-                display: 'flex', gap: '4px'
+                position: 'absolute', bottom: '16px', left: '24px',
+                display: 'flex', gap: '6px'
             }}>
                 {BANNERS.map((_, idx) => (
                     <div
                         key={idx}
                         onClick={() => setCurrentIndex(idx)}
                         style={{
-                            width: idx === currentIndex ? '12px' : '4px',
-                            height: '4px',
-                            borderRadius: '2px',
+                            width: idx === currentIndex ? '16px' : '6px',
+                            height: '6px',
+                            borderRadius: '3px',
                             backgroundColor: 'white',
                             opacity: idx === currentIndex ? 1 : 0.3,
                             transition: 'all 0.3s',
