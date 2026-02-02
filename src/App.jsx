@@ -807,7 +807,7 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
       condition: (months) => months >= 6 // Safe status
     },
     {
-      id: 'daldal', title: '달달하나 통장 (파킹)',
+      id: 'daldal', title: '달달OO 통장 (파킹)',
       desc: '최대 연 3.0%, 비상금 넣어두기 딱!',
       tag: '비상금', icon: '🍯',
       condition: (months) => months >= 3 // Warning can start
@@ -819,7 +819,7 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
       condition: () => true // Always
     },
     {
-      id: 'minus', title: '하나 비상금대출 (한도조회)',
+      id: 'minus', title: 'OO 비상금대출 (한도조회)',
       desc: '실행 X! 급할 때를 대비해 한도만 확인 (심리적 안전판)',
       tag: '비상용', icon: '🚨',
       condition: () => true // Always visible as safety net
@@ -953,7 +953,7 @@ const SurvivalRunwayPage = ({ onBack, userProfile }) => {
       <div className="header sticky top-0 z-10" style={{ backgroundColor: '#fff', display: 'flex', alignItems: 'center', padding: '16px', borderBottom: '1px solid #eee', color: '#333' }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '10px' }}><ChevronLeft size={24} color="#333" /></button>
         <h1 style={{ fontSize: '18px', fontWeight: '700', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-          하나 런웨이 {gainedMonths > 0 && <span style={{ fontSize: '12px', backgroundColor: '#e6f4ff', color: '#008485', padding: '2px 8px', borderRadius: '12px' }}>+{gainedMonths.toFixed(1)}개월 연장!</span>}
+          OO 런웨이 {gainedMonths > 0 && <span style={{ fontSize: '12px', backgroundColor: '#e6f4ff', color: '#008485', padding: '2px 8px', borderRadius: '12px' }}>+{gainedMonths.toFixed(1)}개월 연장!</span>}
         </h1>
         {/* Toggle Button in Header */}
         <button onClick={() => setShowGraph(!showGraph)} style={{ marginLeft: 'auto', border: '1px solid #ddd', padding: '6px 12px', borderRadius: '20px', backgroundColor: 'white', color: '#666', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
@@ -1167,7 +1167,7 @@ const FinancialMOSPage = ({ onBack, onAssetDetail }) => {
   const [isSocietyMode, setIsSocietyMode] = useState(false);
 
   const missionMap = [
-    { id: 1, title: '입대신고', desc: '하나은행 앱 설치 및 가입', reward: 50 },
+    { id: 1, title: '입대신고', desc: 'OO은행 앱 설치 및 가입', reward: 50 },
     { id: 2, title: '보급품 수령', desc: '나라사랑카드 혜택 확인', reward: 30 },
     { id: 3, title: '적금 가입', desc: '장병내일준비적금 개설', reward: 100 },
     { id: 4, title: '청약 개설', desc: '주택청약종합저축 가입', reward: 50 },
@@ -1548,7 +1548,7 @@ const AssetDetailPage = ({ onBack, userProfile, onQuestClick }) => {
                 <Wallet size={20} color="#009490" />
               </div>
               <div>
-                <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#333' }}>하나 나라사랑우대통장</div>
+                <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#333' }}>OO 나라사랑우대통장</div>
                 <div style={{ fontSize: '12px', color: '#888' }}>123-***-******</div>
               </div>
             </div>
@@ -1781,7 +1781,7 @@ const PromoBanner = () => (
   <div className="promo-banner">
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
       <span style={{ fontSize: '16px' }}>🍀</span>
-      <span style={{ fontFamily: 'Noto Sans KR' }}>하나 나라사랑카드 & 통장 출시!</span>
+      <span style={{ fontFamily: 'Noto Sans KR' }}>OO 나라사랑카드 & 통장 출시!</span>
     </div>
     <span style={{ color: '#ccc' }}>›</span>
   </div>
